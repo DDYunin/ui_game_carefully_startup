@@ -1,10 +1,11 @@
 <script setup>
+
 </script>
 
 <template>
   <div class="container">
     <div class="form">
-      <header>Настройка команды</header>
+      <header class="header">Настройка команды</header>
       <div>
         <div>Участники команды</div>
         <ul></ul>
@@ -30,5 +31,12 @@
   border: 1px solid black;
   border-radius: 20px;
   padding: 20px;
+}
+
+.header {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 30px;
 }
 </style>

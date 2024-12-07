@@ -1,4 +1,27 @@
 <script setup>
+import { ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+
+const router = useRouter();
+const route = useRoute();
+
+const teamName = ref('');
+const password = ref('');
+
+const enterToGame = () => {
+  if (!teamName.trim() || !password.trim()) {
+    return
+  }
+  router.push({
+    name: 'game'
+  })
+}
+
+const createTeam = () => {
+  router.push({
+    name: 'team'
+  })
+}
 </script>
 
 <template>
@@ -6,18 +29,21 @@
     <div class="form">
       <header class="header">Начать игру</header>
       <div class="body">
-        <div>
-          <label for="name">Название команды</label>
-          <input type="text" id="name">
-        </div>
-        <div>
-          <label for="password">Пароль</label>
-          <input type="password" id="password">
-        </div>
+        <v-text-field
+          label="Название команды"
+          v-model="teamName"
+        >
+        </v-text-field>
+        <v-text-field
+          type="password"
+          label="Пароль"
+          v-model="password"
+        >
+        </v-text-field>
       </div>
       <footer class="footer">
-        <button class="button">Создать команду</button>
-        <button class="button">Войти</button>
+        <button class="button" @click="createTeam">Создать команду</button>
+        <button class="button" @click="enterToGame">Войти</button>
       </footer>
     </div>
   </div>
@@ -59,6 +85,8 @@
 
 .button {
   padding: 10px 15px;
+  border: 1px solid black;
+  background: lightgreen;
   cursor: pointer;
 }
 </style>
