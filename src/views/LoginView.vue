@@ -42,8 +42,16 @@ const createTeam = () => {
         </v-text-field>
       </div>
       <footer class="footer">
-        <button class="button" @click="createTeam">Создать команду</button>
-        <button class="button" @click="enterToGame">Войти</button>
+        <v-btn
+          @click="createTeam"
+        >
+          Создать команду
+        </v-btn>
+        <v-btn
+          @click="enterToGame"
+        >
+          Войти
+        </v-btn>
       </footer>
     </div>
   </div>
@@ -80,13 +88,5 @@ const createTeam = () => {
   display: flex;
   column-gap: 20px;
   justify-content: center;
-  padding-top: 20px;
-}
-
-.button {
-  padding: 10px 15px;
-  border: 1px solid black;
-  background: lightgreen;
-  cursor: pointer;
 }
 </style>

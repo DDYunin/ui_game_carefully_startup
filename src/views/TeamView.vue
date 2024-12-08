@@ -1,5 +1,12 @@
 <script setup>
+import { ref } from 'vue';
 
+const items = ref(
+  [
+    { text: 'Петров Иван'},
+    { text: 'Петров Илья'},
+    { text: 'Петров Максим'},
+  ]);
 </script>
 
 <template>
@@ -7,9 +14,26 @@
     <div class="form">
       <header class="header">Настройка команды</header>
       <div>
-        <div>Участники команды</div>
-        <ul></ul>
-        <button>Добавить</button>
+        <v-list class="list">
+          <v-list-subheader class="list__title">Участники команды</v-list-subheader>
+
+          <v-list-item
+            v-for="(item, i) in items"
+            :key="i"
+            :value="item"
+            color="primary"
+          >
+          <template v-slot:append>
+            <v-icon icon="mdi-close"></v-icon>
+          </template>
+            {{ item.text }}
+          </v-list-item>
+        </v-list>
+        <v-btn
+          density="compact"
+          icon="mdi-plus"
+        >
+        </v-btn>
       </div>
       <footer>
         <p>Ваш баланс 600 у.е.</p>
@@ -38,5 +62,16 @@
   font-weight: bold;
   text-align: center;
   margin-bottom: 30px;
+}
+
+.list {
+  border: 1px solid black;
+  border-radius: 10px;
+}
+
+.list__title {
+  font-weight: bold;
+  color: black;
+  font-size: 20px;
 }
 </style>
