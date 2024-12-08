@@ -1,5 +1,8 @@
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const items = ref([
     { text: 'Петров Иван', id: 1},
@@ -27,7 +30,8 @@ const playerSurName = ref('');
 const isDialogOpen = ref(false);
 const addPlayer = () => {
   const name = playerName.value.trim();
-  const surname = playerSurName.value.trim()
+  const surname = playerSurName.value.trim();
+  console.log(name, surname);
   if (
     name === '' ||
     surname === ''
@@ -38,6 +42,8 @@ const addPlayer = () => {
     id: Date.now(),
     text: [name,surname].join(' ')
   })
+  playerName.value = '';
+  playerSurName.value = '';
   isDialogOpen.value = false
 }
 
@@ -47,6 +53,15 @@ const addPlayer = () => {
   <div class="container">
     <div class="form">
       <header class="header">Настройка команды</header>
+      <v-btn
+        append-icon="mdi-keyboard-backspace"
+        @click="router.push({name: 'home'})"
+        :style="{
+          marginBottom: '30px'
+        }"
+      >
+        Назад
+      </v-btn>
       <div class="body">
         <v-list class="list">
           <v-list-subheader class="list__title">Участники команды</v-list-subheader>
