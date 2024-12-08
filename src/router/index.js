@@ -20,6 +20,11 @@ const router = createRouter({
       component: () => import('@/views/GameView.vue'),
     },
     {
+      path: '/admin-panel',
+      children: [],
+      component: () => import('@/views/AdminPanelView.vue'),
+    },
+    {
       path: '/admin',
       children: [],
       component: () => import('@/views/GameView.vue'),
