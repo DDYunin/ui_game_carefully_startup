@@ -1,33 +1,47 @@
 <script setup>
 import { ref } from 'vue';
+
 const teams = ref([
   { 
-    name: 'Говноеды', 
+    name: 'Команда 1', 
     members: ['Володя', 'Саня', 'Костян'], 
     showMembers: false,
-    money: 5000,
+    shares: [
+      {
+        name: "Средние рога",
+        price: 100,
+        count: 10
+      },
+      {
+        name: "Большие рога",
+        price: 200,
+        count: 10
+      },
+      {
+        name: "Маленькие рога",
+        price: 50,
+        count: 3
+      }
+
+    ],
+    money: 5000
   },
   { 
-    name: 'Дерьмоеды', 
+    name: 'Команда 2', 
     members: ['Стас', 'Влад'], 
+    shares: [
+
+    ],
     showMembers: false,
-    money: 3000,
+    money: 3000
   },
 ]);
 
+
+// --------------------------- Инициалиация игры -------------------------------------
 const isGameCreated = ref(false); 
 const isRegistrationOpen = ref(false)
 const isGameStarted = ref(false)
-
-const RoundState = {
-  NOT_STARTED: 'Ожидает начала',
-  IN_PROGRESS: 'В процессе',
-  PAUSED: 'Пауза',
-  ENDED: 'Завершен'
-};
-
-const roundState = ref(RoundState.NOT_STARTED);
-
 
 const createGame = () => {
   isGameCreated.value = true; 
@@ -60,8 +74,24 @@ const closeModal = () => {
   activeTeam.value = null;
 };
 
-// Храним номер текущего раунда и его статус
-const roundNumber = ref(1); // Начинаем с раунда 1
+const totalMoney = (activeTeam) => {
+  const sharesTotal = activeTeam.shares.reduce((total, share) => {
+    return total + (share.price * share.count); 
+  }, 0);
+
+  return sharesTotal + activeTeam.money;
+};
+
+// --------------------------- Управление раундом -------------------------------------
+
+const RoundState = {
+  NOT_STARTED: 'Ожидает начала',
+  IN_PROGRESS: 'В процессе',
+  ENDED: 'Завершен'
+};
+
+const roundState = ref(RoundState.NOT_STARTED);
+const roundNumber = ref(1); 
 
 // Функция для начала раунда
 const startRound = () => {
@@ -69,20 +99,15 @@ const startRound = () => {
     roundNumber.value += 1;
   }
   roundState.value = RoundState.IN_PROGRESS;
+  transactionState.value = TransactionState.NOT_STARTED;
 };
 
-// Функция для паузы раунда
-const pauseRound = () => {
-  roundState.value = RoundState.PAUSED;
-};
 
-// Функция для окончания раунда
 const endRound = () => {
   roundState.value = RoundState.ENDED;
 };
 
-
-
+// --------------------------- Управление транзакциями -------------------------------------
 
 const TransactionState = {
   NOT_STARTED: 'Ожидают начала',
@@ -92,21 +117,44 @@ const TransactionState = {
 };
 
 const transactionState = ref(TransactionState.NOT_STARTED);
-const remainingTime = 60;
+
+const defaultTransactionDuration = 300; // Длительность таймера
+const remainingDurationTime = ref(defaultTransactionDuration); // Оставшееся время
+const timer = ref(null);
 
 const startTransaction = () => {
     transactionState.value = TransactionState.IN_PROGRESS;
+    if (!timer.value) {
+      timer.value = setInterval(() => {
+        if (remainingDurationTime.value > 0) {
+          remainingDurationTime.value -= 1;
+        } else {
+          endTransaction();
+        }
+      }, 1000);
+    }
 }
 
 const pauseTransaction = () => {
     transactionState.value = TransactionState.PAUSED;
+    clearInterval(timer.value);
+    timer.value = null;
 }
 
 const endTransaction = () => {
     transactionState.value = TransactionState.ENDED;
+    remainingDurationTime.value = defaultTransactionDuration;
+    clearInterval(timer.value);
+    timer.value = null;
+    // Вызов метоад на бек об окончании торгов
+
 }
 
-
+const formatTime = (time) => {
+  const minutes = Math.floor(time / 60);
+  const seconds = time % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+};
 
 </script>
 
@@ -118,6 +166,7 @@ const endTransaction = () => {
     </header>
 
     <h2 style="margin-top: 10px;">Игра</h2>
+
     <!-- Нет активной игры -->
     <div v-if="!isGameCreated" class="no-active-game-section" id="no-active-game-section">
       <div class="no-game-info">
@@ -126,17 +175,25 @@ const endTransaction = () => {
       <button id="start-game-btn" @click="createGame">Создать игру!</button>
     </div>
 
-   <!-- Блок для активной игры -->
+   <!-- Список команд -->
    <div v-else class="active-game-section" id="game-management-active-game">
       <div>
-        <h3 style="margin-top: 10px;">Список команд:</h3>
-        <ul class="team-list">
-          <li v-for="team in teams" :key="team.name" class="team-item">
-            <div @click="openTeamInfo(team)" class="team-name">
-                {{team.name}}
-            </div>
-          </li>
-        </ul>
+        <h3>Список команд:</h3>
+      <v-card 
+        max-width="500"
+        class="my-4"
+        style="text-align: left;" >
+        <v-list>
+          <v-list-item 
+            v-for="(team, index) in teams" 
+            :key="index"
+            @click="openTeamInfo(team)">
+              <v-list-item-content>
+                <v-list-item-title style="font-weight: bold;">{{ team.name }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+        </v-list>
+      </v-card>
       </div>
 
       <!-- Модалка для отображения информации о команде -->
@@ -147,12 +204,33 @@ const endTransaction = () => {
         <ul>
           <li v-for="member in activeTeam.members" :key="member" class="team-member">{{ member }}</li>
         </ul>
-        <h3>Деньги: {{ activeTeam.money }} ₽</h3>
-        <button @click="closeModal">Закрыть</button>
+        <h3>Акции: </h3>
+        <table class="team-table">
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Количество</th>
+            <th>Стоимость одной штуки</th>
+            <th>Общая стоимость</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(share, index) in activeTeam.shares" :key="index">
+            <td>{{ share.name }}</td>
+            <td>{{ share.count }}</td>
+            <td>{{ share.price }}</td>
+            <td>{{ share.count * share.price }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+        <h3 style="text-align: left;">Оставшиеся деньги: {{ activeTeam.money }} </h3>
+        <h3 style="text-align: left;">Суммарный капитал: {{ totalMoney(activeTeam) }} </h3>
+        <button style="margin-top: 10px;" @click="closeModal">Закрыть</button>
       </div>
     </div>
 
-    <!-- Кнопки управления открытие и закрытие регистрации -->
+    <!-- Кнопки управления открытия и закрытия регистрации -->
       <div style="flex-direction: row;">
         <button v-if="!isGameStarted" class="row-button"
             id="start-registration-teams-btn"
@@ -196,14 +274,9 @@ const endTransaction = () => {
         >Начать раунд
         </button>
       <button class="row-button"
-       id="pause-round-btn"
-       :disabled="roundState != RoundState.IN_PROGRESS"
-       @click="pauseRound" 
-       >Пауза
-    </button>
-      <button class="row-button"
       id="end-round-btn" 
-      :disabled="roundState == RoundState.ENDED || roundState == RoundState.NOT_STARTED"
+      :disabled="roundState == RoundState.ENDED || roundState == RoundState.NOT_STARTED || transactionState == TransactionState.IN_PROGRESS 
+      || transactionState == TransactionState.PAUSED"
       @click="endRound" 
       >Закончить раунд
     </button>
@@ -211,22 +284,21 @@ const endTransaction = () => {
     </div>
 
     <!-- Управление транзакциями -->
-    <div v-if="isGameStarted" id="trade-management">
+    <div v-if="isGameStarted" class="active-game-section" id="trade-management">
       <h2>Управление торгами</h2>
       <p>Статус торгов: <span class="transation_state">{{ transactionState }}</span></p>
-      <p>Оставшееся время торгов: <span class="status" id="trade-timer">{{ remainingTime }}</span></p>
-
-      <button 
-        id="start-trade-btn" 
+      <p>Оставшееся время торгов: {{ formatTime(remainingDurationTime) }} </p>
+      <button id="start-trade-btn" 
         class="row-button"
-        :disabled="transactionState == TransactionState.IN_PROGRESS"
+        :disabled="transactionState == TransactionState.IN_PROGRESS || roundState == RoundState.NOT_STARTED || roundState == RoundState.ENDED"
         @click="startTransaction"
         >Начать торги
     </button>
       <button 
       id="pause-trade-btn"
        class="row-button"
-       :disabled="transactionState != TransactionState.IN_PROGRESS"
+       :disabled="transactionState != TransactionState.IN_PROGRESS || roundState == TransactionState.NOT_STARTED 
+          || roundState == TransactionState.ENDED"
        @click="pauseTransaction"
        >
        Пауза торгов
@@ -235,17 +307,12 @@ const endTransaction = () => {
       id="end-trade-btn" 
       class="row-button"
       @click="endTransaction"
-      :disabled="transactionState == TransactionState.ENDED || transactionState == TransactionState.NOT_STARTED"
+      :disabled="transactionState == TransactionState.ENDED || transactionState == TransactionState.NOT_STARTED || 
+        roundState == TransactionState.NOT_STARTED  || roundState == TransactionState.ENDED"
       >Завершить торги
     </button>
     </div>
 
-    <!-- История раундов для отката раундов -->
-    <div v-if="isGameStarted" class="section" id="log-section">
-      <h2>История раундов</h2>
-      <div class="log" id="action-log"></div>
-      <button id="restore-state-btn" disabled>Restore Previous State</button>
-    </div>
   </div>
 </template>
 
@@ -261,7 +328,21 @@ const endTransaction = () => {
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     }
 
-    /* Стили команд */
+    button {
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+
+    /* Стили отображения команд */
     .team-list {
         margin-top: 5px;
         list-style-type: none; 
@@ -276,46 +357,24 @@ const endTransaction = () => {
     }
     .team-member {
         list-style-type: none; 
-        padding: 5px;
+        padding: 2px;
     }
 
+    /* Стили для кнопок, расположенных в одной строке */
     .row-button {
         margin-right: 10px;
         margin-top: 5px;
     }
     
-    .section {
-      margin-bottom: 30px;
+    /* Стиль для активных секций */
+    .active-game-section {
+      margin-top: 10px;
     }
-    .section h2 {
-      margin-bottom: 10px;
-    }
-    button {
-      background-color: #007BFF;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:disabled {
-      background-color: #aaa;
-      cursor: not-allowed;
-    }
-    .log {
-      border: 1px solid #ccc;
-      padding: 10px;
-      height: 200px;
-      overflow-y: auto;
-      background: #f9f9f9;
-    }
+
     .status {
       font-weight: bold;
     }
-    .game-management-section {
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
+
     .no-game-info {
     padding: 10px;
     background-color: #fff4f4;
@@ -327,6 +386,13 @@ const endTransaction = () => {
     font-size: 16px;
   }
 
+  /* Стиль акций */
+  .share {
+    list-style-type: none; 
+    padding: 2px;
+  }
+
+  /* Модалка */
   .modal-overlay {
   position: fixed;
   top: 0;
@@ -345,5 +411,23 @@ const endTransaction = () => {
   border-radius: 8px;
   width: 500px;
   text-align: center;
+}
+
+
+/* Табличка с акциями */
+.team-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.team-table th, .team-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.team-table th {
+  background-color: #f4f4f4;
 }
 </style>
