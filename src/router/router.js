@@ -4,7 +4,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useAdminStore } from "@/stores/adminStore";
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   scrollBehavior() {
     return { top: 0 }
   },
@@ -22,17 +22,17 @@ const router = createRouter({
     {
       path: '/game',
       name: 'game',
-      meta: {
-        auth: true
-      },
+      // meta: {
+      //   auth: true
+      // },
       component: () => import('@/views/GameView.vue'),
     },
     {
       path: '/admin-panel',
       name: 'admin-panel',
-      meta: {
-        auth: true
-      },
+      // meta: {
+      //   auth: true
+      // },
       component: () => import('@/views/AdminPanelView.vue'),
     },
     {

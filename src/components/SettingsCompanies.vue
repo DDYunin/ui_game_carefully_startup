@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="wrapper">
     <v-data-table :headers="headers" :items="desserts" hide-default-footer>
       <template v-slot:top>
         <v-toolbar flat>
@@ -16,7 +16,7 @@
               <v-card-text>
                 <v-text-field
                   v-model="editedItem.name"
-                  label="Название команды"
+                  label="Название компании"
                 ></v-text-field>
                 <v-text-field
                   v-model="editedItem.cash1"
@@ -199,4 +199,8 @@ const save = () => {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.wrapper {
+  border: 1px solid black;
+}
+</style>
