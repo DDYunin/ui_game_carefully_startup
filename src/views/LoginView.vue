@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import SettingsCompanies from '@/components/SettingsCompanies.vue';
 
 const router = useRouter();
 
@@ -53,6 +54,7 @@ const createTeam = () => {
         </v-btn>
       </footer>
     </div>
+    <SettingsCompanies />
   </div>
 </template>
 
