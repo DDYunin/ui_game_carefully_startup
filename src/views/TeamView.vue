@@ -20,8 +20,15 @@ onMounted(async () => {
   try {
     const { data } = await API.getTeam({
       teamId
-    })
-    console.log(data)
+    });
+    if (data.members) {
+      items.value = data.members.map((item, index) => {
+        return {
+          member: item,
+          id: index
+        }
+      });
+    }
   } catch (e) {
     console.error(e);
   }
@@ -73,10 +80,10 @@ const updateTeam = async () => {
       members: items.value.map(item => item.member)
     })
     console.log('Победа')
+    toggleReady(true)
   } catch (e) {
     console.error(e)
   }
-  toggleReady(true)
 }
 
 </script>

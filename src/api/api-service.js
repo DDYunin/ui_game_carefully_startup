@@ -31,6 +31,10 @@ class ApiService {
   getTeam(options) {
     return axios.get(this.#createUrl(`team/${options.teamId}`), options)
   }
+
+  buyPapers(options) {
+    return axios.post(this.#createUrl('team/purchase'), options)
+  }
   // Public methods
   signIn(options = {}) {
     return axios.post(`${this.apiUrl}/auth/sign-in`, options)

@@ -1,22 +1,70 @@
 <script setup>
+import { API } from '@/api/api-service';
+import { onMounted, ref } from 'vue';
+import ActionPaper from '@/components/ActionPaper.vue';
+import { jwtDecode } from "jwt-decode";
 
-const desserts = [
+
+const tokens = JSON.parse(localStorage.getItem('userTokens'))
+const { sub: teamId, name: teamName} = jwtDecode(tokens.token);
+
+const companies = ref([
   {
-    name: 'bo',
-    cash: 'asd',
-    number: '1'
+    id: 2,
+    name: 'as',
+    cash: 1,
+    number: 21,
+    value: 0,
+    picked: ''
   },
   {
-    name: 'bo1',
-    cash: 'asd',
-    number: '2'
-  },
-  {
-    name: 'bo2',
-    cash: 'asd',
-    number: '3'
+    id: 4,
+    name: 'asa',
+    cash: 1,
+    number: 21,
+    value: 0,
+    picked: ''
   }
-]
+]);
+
+onMounted(async () => {
+  try {
+    const { data } = await API.getCompanies();
+  } catch (e) {
+    console.error(e);
+  }
+})
+
+const updateValue = ({ index, value }) => {
+  companies.value[index].value = value;
+}
+
+const updatePicked = ({ index, picked }) => {
+  companies.value[index].picked = picked;
+}
+
+const makeActionPapers = async () => {  
+  const ids = companies.value.map(company => company.id)
+  const papers = companies.value.map(company => {
+    if (company.picked === 'sell') {
+      return company.value * -1
+    }
+    return company.value
+  })
+  const result = ids.reduce((acc, key, index) => {
+    acc[key] = papers[index];
+    return acc;
+  }, {});
+  try {
+    const { data } = await API.buyPapers({
+      id: teamId,
+      sharesChanges: result
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 </script>
 
 <template>
@@ -50,35 +98,34 @@ const desserts = [
           </thead>
           <tbody>
             <tr
-              v-for="item in desserts"
+              v-for="(item, companyIndex) in companies"
               :key="item.name"
             >
               <td>{{ item.name }}</td>
               <td>{{ item.cash }}</td>
               <td>{{ item.number }}</td>
-              <td class="cash-info">
-                  <input
-                    type="number"
-                    class="input"
-                    value="0"
-                    min="0"
-                  >
-                  <label>
-                    <input type="radio" value="sell" :name="item.name">
-                    Продать
-                  </label>
-                  <label>
-                    <input type="radio" value="buy" :name="item.name">
-                    Купить
-                  </label>
-
+              <td>
+                <ActionPaper
+                  class="cash-info"
+                  :options="{
+                    name: item.name,
+                    index: companyIndex
+                  }"
+                  @update-value="updateValue"
+                  @update-picked="updatePicked"
+                />
               </td>
             </tr>
           </tbody>
         </v-table>
       </div>
       <div>
-        <button class="button">Подтвердить</button>
+        <button
+          class="button"
+          @click="makeActionPapers"
+        >
+          Подтвердить
+        </button>
       </div>
     </div>
     <div style="width: 30px;"></div>
@@ -184,11 +231,7 @@ const desserts = [
   column-gap: 10px;
 }
 
-.input {
-  border: 1px solid black;
-  width: 100px;
-  height: 22px;
-}
+
 
 .block {
   display: flex;
