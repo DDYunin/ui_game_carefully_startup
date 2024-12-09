@@ -7,6 +7,45 @@ class ApiService {
     console.log('Я создался c адрессом = ', this.apiUrl);
   }
 
+  getTeams(options) {
+    return axios.get(this.#createUrl('team'), options);
+  }
+
+  stopTrade(options) {
+    return axios.patch(this.#createUrl('game/trade/stop'), options);
+  }
+
+  startTrade(options) {
+    return axios.patch(this.#createUrl('game/trade/start'), options);
+  }
+
+  startRound(options) {
+    return axios.patch(this.#createUrl('game/round/start'), options);
+  }
+
+  stopRegistration(options) {
+    return axios.patch(this.#createUrl('game/registration/stop'), options);
+  }
+
+  openRegistration(options) {
+    return axios.patch(this.#createUrl('game/registration/start'), options);
+  }
+
+  stopGame(options) {
+    return axios.patch(this.#createUrl('game/stop'), options);
+  }
+
+  startGame(options) {
+    return axios.patch(this.#createUrl('game/start'), options);
+  }
+
+  createGame(options) {
+    return axios.patch(this.#createUrl('game/create'), options);
+  }
+
+  getGame(options) {
+    return axios.get(this.#createUrl('game'), options);
+  }
 
   createCompany(options) {
     return axios.post(this.#createUrl('company'), options);

@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted,ref } from 'vue';
 import SettingsCompanies from '@/components/SettingsCompanies.vue';
+import { API } from '@/api/api-service';
 
 const teams = ref([
   { 
@@ -38,31 +39,116 @@ const teams = ref([
   },
 ]);
 
+const teamsShortInfo = ref([
+])
+
 
 // --------------------------- Инициалиация игры -------------------------------------
 const isGameCreated = ref(false); 
 const isRegistrationOpen = ref(false)
 const isGameStarted = ref(false)
 
-const createGame = () => {
-  isGameCreated.value = true; 
+onMounted(async () => {
+  try {
+    const {data} = await API.getGame();
+    console.log(data);
+    if(data.state == 3) {
+      // Игра завершена или не началась. Сбрасываем все 
+      isGameCreated.value = false;
+      isRegistrationOpen.value = false;
+      isGameStarted.value = false;
+    } else if(data.state == -1) { // 
+      getTeams();
+      isGameCreated.value = true;
+      isRegistrationOpen.value = false;
+    } else if(data.state == 2) {
+      isGameStarted.value = true;
+      isGameCreated.value = true;
+      getTeams();
+      // Видимо перезагрузили страничку и игра уже идет, поэтому нужно обновить всю инфу по командам и компаниям
+    } else if(data.state == 1) {
+      isGameCreated.value = true;
+      isRegistrationOpen.value = true;
+      teamFetcher.value = setInterval(() => { getTeams() }, 5000);
+    }
+  } catch(e) {
+    console.error(e);
+  } finally {
+
+  }
+
+})
+
+const teamFetcher = ref(null);
+
+const getTeams = async() => {
+  try {
+    const { data } = await API.getTeams();
+    console.log(data);
+    teamsShortInfo.value = data.data;
+  } catch(e) {
+    console.log(e);
+  }
+}
+
+const createGame = async() => {
+  try {
+    const {data} = await API.createGame();
+    isGameCreated.value = true;
+    isRegistrationOpen.value = false;
+    console.log(data);
+  } catch(e) {
+    console.log(e);
+  }
+
 };
 
-const openRegistration = () => {
+const openRegistration = async() => {
+  try {
+    const {data} = await API.openRegistration();
+    teamFetcher.value = setInterval(() => { getTeams() }, 5000);
+    isGameCreated.value = true;
+    isRegistrationOpen.value = true;
+  } catch(e) {
+    console.log(e);
+  }
     isRegistrationOpen.value = true;
     teams.value.push
 };
 
-const closeRegistration = () => {
-    isRegistrationOpen.value = false;
+const closeRegistration =  async() => {
+    try{
+      await API.stopRegistration();
+      isRegistrationOpen.value = false;
+      clearInterval(teamFetcher.value);
+    } catch(e) {
+
+    }
 };
 
-const startGame = () => {
-    isGameStarted.value = true;
+const startGame = async () => {
+    try {
+      const {data} = await API.startGame();
+      isGameStarted.value = true;
+      isGameCreated.value = true;
+      console.log(data);
+    } catch(e) {
+      console.log(e);
+    }  
 };
 
-const endGame = () => {
-
+const endGame = async () => {
+  try {
+    const {data} = await API.stopGame();
+      isGameCreated.value = false;
+      isRegistrationOpen.value = false;
+      isGameStarted.value = false;
+      teamsShortInfo.value = [];
+    console.log(data);
+  } catch(e) {
+    console.log(e);
+  }
+  
 };
 
 const activeTeam = ref(null);
@@ -95,7 +181,8 @@ const roundState = ref(RoundState.NOT_STARTED);
 const roundNumber = ref(1); 
 
 // Функция для начала раунда
-const startRound = () => {
+const startRound = async() => {
+  await API.startRound();
   if(roundState.value == RoundState.ENDED) {
     roundNumber.value += 1;
   }
@@ -123,7 +210,8 @@ const defaultTransactionDuration = 300; // Длительность таймер
 const remainingDurationTime = ref(defaultTransactionDuration); // Оставшееся время
 const timer = ref(null);
 
-const startTransaction = () => {
+const startTransaction = async() => {
+    await API.startTrade();
     transactionState.value = TransactionState.IN_PROGRESS;
     if (!timer.value) {
       timer.value = setInterval(() => {
@@ -142,7 +230,8 @@ const pauseTransaction = () => {
     timer.value = null;
 }
 
-const endTransaction = () => {
+const endTransaction = async () => {
+    await API.stopTrade();
     transactionState.value = TransactionState.ENDED;
     remainingDurationTime.value = defaultTransactionDuration;
     clearInterval(timer.value);
@@ -186,11 +275,11 @@ const formatTime = (time) => {
         style="text-align: left;" >
         <v-list>
           <v-list-item 
-            v-for="(team, index) in teams" 
+            v-for="(teamShortInfo, index) in teamsShortInfo" 
             :key="index"
             @click="openTeamInfo(team)">
               <v-list-item-content>
-                <v-list-item-title style="font-weight: bold;">{{ team.name }}</v-list-item-title>
+                <v-list-item-title style="font-weight: bold;">{{ teamShortInfo.name }}</v-list-item-title>
               </v-list-item-content>
             </v-list-item>
         </v-list>
