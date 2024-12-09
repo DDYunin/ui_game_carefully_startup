@@ -3,43 +3,35 @@ import axios from "axios";
 
 class ApiService {
   constructor() {
-    this.apiUrl = '';
+    this.apiUrl = 'http://localhost:11864/api/';
     console.log('Я создался c адрессом = ', this.apiUrl);
   }
 
+
+  createCompany(options) {
+    return axios.post(this.#createUrl('company'), options);
+  }
+
+  getCompanies() {
+    return axios.get(this.#createUrl('company'))
+  }
+
+  registration(options) {
+    return axios.post(this.#createUrl('auth/registration'), options)
+  }
+
+  login(options) {
+    return axios.post(this.#createUrl('auth/login'), options)
+  }
+
+  updateTeam(options) {
+    return axios.patch(this.#createUrl('team'), options)
+  }
+
+  getTeam(options) {
+    return axios.get(this.#createUrl(`team/${options.teamId}`), options)
+  }
   // Public methods
-  getArticles(options = {}) {
-    return axios.get(`${this.apiUrl}/article${this.#createQueryParams(options)}`);
-  }
-
-  createArticle(options = {}) {
-    return axios.post(`${this.apiUrl}/article`, options);
-  }
-
-  updateArticle(options = {}) {
-    return axios.put(`${this.apiUrl}/article/${options.id}`, options);
-  }
-
-  deleteArticle(options = {}) {
-    return axios.delete(`${this.apiUrl}/article/${options.id}`);
-  }
-
-  getArticle(options = {}) {
-    return axios.get(`${this.apiUrl}/article/${options.id}`);
-  }
-
-  getMedia(options = {}) {
-    return axios.get(`${this.apiUrl}/content${this.#createQueryParams(options)}`);
-  }
-
-  createMedia(options = {}) {
-    return axios.post(`${this.apiUrl}/content${this.#createQueryParams(options)}`, options.image)
-  }
-
-  deleteMedia(options = {}) {
-    return axios.delete(`${this.apiUrl}/content/${options.id}`);
-  }
-
   signIn(options = {}) {
     return axios.post(`${this.apiUrl}/auth/sign-in`, options)
   }
@@ -65,6 +57,10 @@ class ApiService {
       paramsString = `?${params.join('&')}`;
     }
     return paramsString;
+  }
+
+  #createUrl(path) {
+    return this.apiUrl + path;
   }
 };
 

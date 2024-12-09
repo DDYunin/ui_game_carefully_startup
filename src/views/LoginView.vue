@@ -1,25 +1,67 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { API } from '@/api/api-service';
+import { useAuthStore } from '@/stores/authStore'
+
 
 const router = useRouter();
 
+const authStore = useAuthStore();
+
 const teamName = ref('');
 const password = ref('');
+const haveError = ref(false);
+const errorMessage = ref('');
 
-const enterToGame = () => {
-  if (!teamName.value.trim() || !password.value.trim()) {
-    return
+const disabledButton = computed(() => {
+  return !(teamName.value.length && password.value.length);
+});
+
+const enterToGame = async () => {
+  try {
+    await authStore.signIn({
+      teamName: teamName.value,
+      password: password.value
+    });
+    localStorage.setItem('teamName', teamName.value);
+    localStorage.setItem(teamName.value, Date.now());
+    router.push({
+      name: 'team',
+    })
+  } catch(e) {
+    haveError.value = true;
+    errorMessage.value = 'Ошибка на этапе входа';
+    setTimeout(() => {
+      haveError.value = false
+    }, 5000)
+    console.error(e)
+  } finally {
+    teamName.value = '';
+    password.value = '';
   }
-  router.push({
-    name: 'game'
-  })
 }
 
-const createTeam = () => {
-  router.push({
-    name: 'team'
-  })
+
+const createTeam = async () => {
+  try {
+    await API.registration({
+      teamName: teamName.value,
+      password: password.value
+    });
+    alert('Команда успешно создана');
+  } catch(e) {
+    haveError.value = true;
+    errorMessage.value = 'Ошибка на этапе регистрации';
+    setTimeout(() => {
+      haveError.value = false
+    }, 5000)
+    console.error(e)
+  } finally {
+    teamName.value = '';
+    password.value = '';
+  }
+
 }
 </script>
 
@@ -39,14 +81,20 @@ const createTeam = () => {
           v-model="password"
         >
         </v-text-field>
+        <p
+          class="error-message"
+          v-show="haveError"
+        >  {{ errorMessage }}</p>
       </div>
       <footer class="footer">
         <v-btn
+          :disabled="disabledButton"
           @click="createTeam"
         >
           Создать команду
         </v-btn>
         <v-btn
+          :disabled="disabledButton"
           @click="enterToGame"
         >
           Войти
@@ -87,5 +135,10 @@ const createTeam = () => {
   display: flex;
   column-gap: 20px;
   justify-content: center;
+}
+
+.error-message {
+  color: red;
+  font-size: 20px;
 }
 </style>

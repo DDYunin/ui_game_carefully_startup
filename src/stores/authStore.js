@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { API } from "@/api/api-service";
 
+
 const TIME_EXPIRED_ACCESS_TOKEN = 10 * 60
 
 export const useAuthStore = defineStore('auth', () => {
@@ -14,17 +15,15 @@ export const useAuthStore = defineStore('auth', () => {
 
   const signIn = async (options) => {
     try {
-      const { data } = await API.signIn(options);
+      const { data } = await API.login(options);
       console.log(data)
       localStorage.setItem('userTokens', JSON.stringify({
         token: data.accessToken,
-        refresh: data.refreshToken,
-        expireIn: TIME_EXPIRED_ACCESS_TOKEN
+        refresh: data.refreshToken
       }))
       userInfo.value = {
         token: data.accessToken,
-        refreshToken: data.refreshToken,
-        expireIn: TIME_EXPIRED_ACCESS_TOKEN
+        refreshToken: data.refreshToken
       }
       // const response = await API.refreshToken();
       // console.log(response)

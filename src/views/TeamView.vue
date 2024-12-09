@@ -1,14 +1,32 @@
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { API } from '@/api/api-service';
+import { jwtDecode } from "jwt-decode";
+
 
 const router = useRouter();
 
-const items = ref([
-    { text: 'Петров Иван', id: 1},
-    { text: 'Петров Илья', id: 2},
-    { text: 'Петров Максим', id: 3},
-  ]);
+
+const tokens = JSON.parse(localStorage.getItem('userTokens'))
+const { sub: teamId, name: teamName} = jwtDecode(tokens.token);
+
+
+console.log(teamName, teamId);
+
+const items = ref([]);
+
+onMounted(async () => {
+  try {
+    const { data } = await API.getTeam({
+      teamId
+    })
+    console.log(data)
+  } catch (e) {
+    console.error(e);
+  }
+})
+
 
 const isReady = ref(false);
 const toggleReady = (on) => {
@@ -40,11 +58,25 @@ const addPlayer = () => {
   }
   items.value.push({
     id: Date.now(),
-    text: [name,surname].join(' ')
+    member: [name,surname].join(' ')
   })
   playerName.value = '';
   playerSurName.value = '';
   isDialogOpen.value = false
+}
+
+const updateTeam = async () => {
+  try {
+    await API.updateTeam({
+      id: teamId,
+      name: teamName,
+      members: items.value.map(item => item.member)
+    })
+    console.log('Победа')
+  } catch (e) {
+    console.error(e)
+  }
+  toggleReady(true)
 }
 
 </script>
@@ -78,7 +110,7 @@ const addPlayer = () => {
               @click="deletePlayer(item.id)"
             ></v-icon>
           </template>
-            {{ item.text }}
+            {{ item.member }}
           </v-list-item>
         </v-list>
         <div class="body__buttons">
@@ -90,7 +122,7 @@ const addPlayer = () => {
           </v-btn>
           <v-btn
             v-if="!isReady"
-            @click="toggleReady(true)"
+            @click="updateTeam"
             color="light-green-lighten-3"
           >
             Подтвердить
@@ -102,7 +134,6 @@ const addPlayer = () => {
           >
             Отменить
           </v-btn>
-
         </div>
       </div>
       <footer class="footer">
