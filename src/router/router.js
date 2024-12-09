@@ -3,6 +3,9 @@ import LoginView from '@/views/LoginView.vue';
 import { useAuthStore } from "@/stores/authStore";
 import { useAdminStore } from "@/stores/adminStore";
 
+
+
+
 const router = createRouter({
   history: createWebHistory(),
   scrollBehavior() {
@@ -13,18 +16,24 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: LoginView,
+      beforeEnter: (to, from) => {
+
+      }
     },
     {
       path: '/team',
       name: 'team',
+      meta: {
+        auth: true
+      },
       component: () => import('@/views/TeamView.vue'),
     },
     {
       path: '/game',
       name: 'game',
-      // meta: {
-      //   auth: true
-      // },
+      meta: {
+        auth: true
+      },
       component: () => import('@/views/GameView.vue'),
     },
     {
@@ -50,7 +59,6 @@ const router = createRouter({
 router.beforeEach((to, from) => {
   const authStore = useAuthStore()
   const adminStore = useAdminStore();
-
   console.log('er ', to, from)
   // if (to === from) {
   //   return
@@ -61,13 +69,12 @@ router.beforeEach((to, from) => {
     return { name: 'home' }
   }
 
-
-  if (to.meta.auth && !authStore.userInfo.token) {
-    return { name: 'home' }
-  }
-  if (!to.meta.auth && authStore.userInfo.token) {
-    return { name: 'admin-panel'}
-  }
+  // if (to.meta.auth && !authStore.userInfo.token) {
+  //   return { name: 'home' }
+  // }
+  // if (!to.meta.auth && authStore.userInfo.token) {
+  //   return { name: 'admin-panel'}
+  // }
 })
 
 export default router
