@@ -1,8 +1,9 @@
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const router = useRouter();
+const route = useRoute();
 
 const teamName = ref('');
 const password = ref('');
@@ -12,13 +13,7 @@ const enterToGame = () => {
     return
   }
   router.push({
-    name: 'game'
-  })
-}
-
-const createTeam = () => {
-  router.push({
-    name: 'team'
+    name: 'admin-panel'
   })
 }
 </script>
@@ -26,10 +21,10 @@ const createTeam = () => {
 <template>
   <div class="container">
     <div class="form">
-      <header class="header">Начать игру</header>
+      <header class="header">Войти в панель администратора</header>
       <div class="body">
         <v-text-field
-          label="Название команды"
+          label="Логин"
           v-model="teamName"
         >
         </v-text-field>
@@ -41,11 +36,6 @@ const createTeam = () => {
         </v-text-field>
       </div>
       <footer class="footer">
-        <v-btn
-          @click="createTeam"
-        >
-          Создать команду
-        </v-btn>
         <v-btn
           @click="enterToGame"
         >
@@ -80,12 +70,11 @@ const createTeam = () => {
 .body {
   display: flex;
   flex-direction: column;
-  padding: 30px;
+  padding: 30px 20px;
 }
 
 .footer {
   display: flex;
-  column-gap: 20px;
   justify-content: center;
 }
 </style>

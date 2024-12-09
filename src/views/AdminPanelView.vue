@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue';
+import SettingsCompanies from '@/components/SettingsCompanies.vue';
 
 const teams = ref([
   { 
@@ -312,8 +313,10 @@ const formatTime = (time) => {
         roundState == TransactionState.NOT_STARTED  || roundState == TransactionState.ENDED"
       >Завершить торги
     </button>
-    </div>
+    </div>  
 
+
+    <SettingsCompanies v-show="isGameCreated" class="active-game-section"/>
   </div>
 </template>
 
