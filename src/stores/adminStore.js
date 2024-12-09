@@ -14,7 +14,7 @@ export const useAdminStore = defineStore('admin', () => {
 
   const signIn = async (options) => {
     try {
-      const { data } = await API.signIn(options);
+      const { data } = await API.login(options);
       console.log(data)
       localStorage.setItem('adminTokens', JSON.stringify({
         token: data.accessToken,

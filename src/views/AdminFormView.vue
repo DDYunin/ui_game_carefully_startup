@@ -1,20 +1,43 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore'
 
 const router = useRouter();
-const route = useRoute();
+
+const authStore = useAuthStore();
 
 const teamName = ref('');
 const password = ref('');
+const haveError = ref(false);
+const errorMessage = ref('');
 
-const enterToGame = () => {
-  if (!teamName.value.trim() || !password.value.trim()) {
-    return
+
+const disabledButton = computed(() => {
+  return !(teamName.value.length && password.value.length);
+});
+
+const enterToGame = async () => {
+  try {
+    await authStore.signIn({
+      teamName: teamName.value,
+      password: password.value
+    });
+
+    router.push({
+      name: 'admin-panel',
+    })
+  } catch(e) {
+    haveError.value = true;
+    errorMessage.value = 'Ошибка на этапе входа';
+    setTimeout(() => {
+      haveError.value = false
+    }, 5000)
+    console.error(e)
+  } finally {
+    teamName.value = '';
+    password.value = '';
   }
-  router.push({
-    name: 'admin-panel'
-  })
 }
 </script>
 
@@ -34,9 +57,14 @@ const enterToGame = () => {
           v-model="password"
         >
         </v-text-field>
+        <p
+          class="error-message"
+          v-show="haveError"
+        >  {{ errorMessage }}</p>
       </div>
       <footer class="footer">
         <v-btn
+          :disabled="disabledButton"
           @click="enterToGame"
         >
           Войти

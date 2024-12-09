@@ -3,9 +3,10 @@ import { useAuthStore } from "@/stores/authStore";
 import { API } from "./api-service";
 
 axios.interceptors.request.use((config) => {
-  const methods = ['post', 'delete', 'put'];
+  const methods = ['post', 'delete', 'put', 'get', 'patch'];
   if (methods.includes(config.method)) {
     const authStore = useAuthStore();
+    console.log(authStore)
     config.headers['Authorization'] = `Bearer ${authStore.userInfo.token}`;
   }
   return config

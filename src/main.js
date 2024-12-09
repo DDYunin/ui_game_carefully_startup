@@ -10,6 +10,7 @@ import * as directives from 'vuetify/directives'
 
 import App from './App.vue'
 import router from './router/router'
+import '@/api/axios-config'
 
 const app = createApp(App)
 

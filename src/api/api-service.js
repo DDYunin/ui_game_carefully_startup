@@ -75,12 +75,9 @@ class ApiService {
     return axios.post(this.#createUrl('team/purchase'), options)
   }
   // Public methods
-  signIn(options = {}) {
-    return axios.post(`${this.apiUrl}/auth/sign-in`, options)
-  }
 
   refreshToken() {
-    return axios.post(`${this.apiUrl}/auth/refresh`)
+    return axios.post(this.#createUrl('auth/refresh'))
   }
 
   // private methods
