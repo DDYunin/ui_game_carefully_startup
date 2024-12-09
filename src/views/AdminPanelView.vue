@@ -153,8 +153,13 @@ const endGame = async () => {
 
 const activeTeam = ref(null);
 
-const openTeamInfo = (team) => {
-  activeTeam.value = team;
+const openTeamInfo = async (teamId) => {
+  const {data } = await API.getTeam(
+    {
+      teamId
+    });
+  activeTeam.value = data;
+  console.log(activeTeam.value);
 };
 
 const closeModal = () => {
@@ -277,7 +282,7 @@ const formatTime = (time) => {
           <v-list-item 
             v-for="(teamShortInfo, index) in teamsShortInfo" 
             :key="index"
-            @click="openTeamInfo(team)">
+            @click="openTeamInfo(teamShortInfo.id)">
               <v-list-item-content>
                 <v-list-item-title style="font-weight: bold;">{{ teamShortInfo.name }}</v-list-item-title>
               </v-list-item-content>
@@ -314,8 +319,8 @@ const formatTime = (time) => {
         </tbody>
       </table>
 
-        <h3 style="text-align: left;">Оставшиеся деньги: {{ activeTeam.money }} </h3>
-        <h3 style="text-align: left;">Суммарный капитал: {{ totalMoney(activeTeam) }} </h3>
+        <h3 style="text-align: left;">Оставшиеся деньги: {{ activeTeam.balanceAmount }} </h3>
+        <!-- <h3 style="text-align: left;">Суммарный капитал: {{ totalMoney(activeTeam) }} </h3> -->
         <button style="margin-top: 10px;" @click="closeModal">Закрыть</button>
       </div>
     </div>
