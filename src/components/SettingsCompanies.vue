@@ -73,7 +73,8 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
+import { API } from '@/api/api-service';
 
 const headers = ref([
   {
@@ -102,6 +103,17 @@ const headers = ref([
   },
 ]);
 
+
+const companies = ref([]);
+
+onMounted(async () => {
+  try {
+    const { data } = await API.getCompanies();
+    console.log(data)
+  } catch (e) {
+    console.error(e);
+  }
+});
 
 const desserts = ref([
   {

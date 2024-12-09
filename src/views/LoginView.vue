@@ -49,7 +49,6 @@ const createTeam = async () => {
       teamName: teamName.value,
       password: password.value
     });
-    alert('Команда успешно создана');
   } catch(e) {
     haveError.value = true;
     errorMessage.value = 'Ошибка на этапе регистрации';

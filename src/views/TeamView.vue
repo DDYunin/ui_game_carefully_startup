@@ -88,19 +88,20 @@ const updateTeam = async () => {
 
 </script>
 
+<!-- <v-btn
+append-icon="mdi-keyboard-backspace"
+@click="router.push({name: 'home'})"
+:style="{
+  marginBottom: '30px'
+}"
+>
+Назад
+</v-btn> -->
+
 <template>
   <div class="container">
     <div class="form">
       <header class="header">Настройка команды</header>
-      <v-btn
-        append-icon="mdi-keyboard-backspace"
-        @click="router.push({name: 'home'})"
-        :style="{
-          marginBottom: '30px'
-        }"
-      >
-        Назад
-      </v-btn>
       <div class="body">
         <v-list class="list">
           <v-list-subheader class="list__title">Участники команды</v-list-subheader>
