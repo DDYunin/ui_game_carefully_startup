@@ -290,11 +290,12 @@ const formatTime = (time) => {
       <p>Оставшееся время торгов: {{ formatTime(remainingDurationTime) }} </p>
       <button id="start-trade-btn" 
         class="row-button"
-        :disabled="transactionState == TransactionState.IN_PROGRESS || roundState == RoundState.NOT_STARTED || roundState == RoundState.ENDED"
+        :disabled="transactionState == TransactionState.IN_PROGRESS || roundState == RoundState.NOT_STARTED || roundState == RoundState.ENDED 
+        || transactionState == TransactionState.ENDED"
         @click="startTransaction"
         >Начать торги
     </button>
-      <button 
+      <!-- <button 
       id="pause-trade-btn"
        class="row-button"
        :disabled="transactionState != TransactionState.IN_PROGRESS || roundState == TransactionState.NOT_STARTED 
@@ -302,7 +303,7 @@ const formatTime = (time) => {
        @click="pauseTransaction"
        >
        Пауза торгов
-    </button>
+    </button> -->
       <button 
       id="end-trade-btn" 
       class="row-button"
