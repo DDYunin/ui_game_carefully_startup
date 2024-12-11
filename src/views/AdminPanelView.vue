@@ -154,12 +154,9 @@ const endGame = async () => {
 const activeTeam = ref(null);
 
 const openTeamInfo = async (teamId) => {
-  const {data } = await API.getTeam(
-    {
-      teamId
-    });
+  const data = await API.getTeam({teamId});
   activeTeam.value = data;
-  console.log(activeTeam.value);
+  console.log(data.data.shares.keys());
 };
 
 const closeModal = () => {
@@ -173,6 +170,10 @@ const totalMoney = (activeTeam) => {
 
   return sharesTotal + activeTeam.money;
 };
+
+// ----------------------- Shares Load --------------------------
+
+
 
 // --------------------------- Управление раундом -------------------------------------
 
@@ -501,6 +502,7 @@ const formatTime = (time) => {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 10000000000;
 }
 
 .modal-content {
