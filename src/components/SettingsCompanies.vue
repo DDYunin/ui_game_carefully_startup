@@ -1,6 +1,6 @@
 <template>
   <div class="wrapper">
-    <v-data-table :headers="headers" :items="desserts" hide-default-footer>
+    <v-data-table :headers="headers" :items="companies" hide-default-footer>
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Компании</v-toolbar-title>
@@ -15,7 +15,7 @@
 
               <v-card-text>
                 <v-text-field
-                  v-model="editedItem.name"
+                  v-model="companies.name"
                   label="Название компании"
                 ></v-text-field>
                 <v-text-field
@@ -103,8 +103,11 @@ const headers = ref([
   },
 ]);
 
+defineProps({
+  companies: [],
+})
 
-const companies = ref([]);
+const companiesHui = ref([]);
 
 onMounted(async () => {
   try {
