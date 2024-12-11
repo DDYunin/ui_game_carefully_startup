@@ -21,6 +21,11 @@ class ApiService {
 
   startRound(options) {
     return axios.patch(this.#createUrl('game/round/start'), options);
+    
+  }
+
+  stopRound() {
+    return axios.patch(this.#createUrl('game/round/stop'));
   }
 
   stopRegistration(options) {

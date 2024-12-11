@@ -196,7 +196,8 @@ const startRound = async() => {
 };
 
 
-const endRound = () => {
+const endRound = async () => {
+  await API.stopRound();
   roundState.value = RoundState.ENDED;
 };
 

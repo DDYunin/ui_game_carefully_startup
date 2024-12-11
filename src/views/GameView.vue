@@ -1,13 +1,43 @@
 <script setup>
 import { API } from '@/api/api-service';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import ActionPaper from '@/components/ActionPaper.vue';
-import { jwtDecode } from "jwt-decode";
-import socket from '@/api/ws-api-service';
+import { jwtDecode } from 'jwt-decode';
+import { socket } from '@/api/ws-api-service';
+import { GAME_STATES } from '@/constants';
 
+const currentRound = ref(1);
+const isTradeGo = ref('');
+const isGameGo = ref('');
+const isRoundGo = ref('');
 
-const tokens = JSON.parse(localStorage.getItem('userTokens'))
-const { sub: teamId, name: teamName} = jwtDecode(tokens.token);
+watch(isRoundGo, async (newIsRoundGo, oldIsRoundGo) => {
+  if (newIsRoundGo) {
+    console.log('Я в watcher-e ', newIsRoundGo);
+    await getGameState();
+  }
+});
+
+socket.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  let [key, value] = Object.entries(data);
+  debugger;
+  if (key[0] === 'isTradeStage') {
+    isTradeGo.value = value[0];
+  }
+  // Автоматически перекинуть на страницу игры
+  if (key[0] === 'gameState') {
+    isGameGo.value = value[0];
+  }
+  // Для просчёта следующего раунда
+  if (key[0] === 'isRoundStage') {
+    isRoundGo.value = value[0];
+  }
+  console.log('event, ', data, Object.keys(data));
+};
+
+const tokens = JSON.parse(localStorage.getItem('userTokens'));
+const { sub: teamId, name: teamName } = jwtDecode(tokens.token);
 
 const companies = ref([
   {
@@ -16,7 +46,7 @@ const companies = ref([
     cash: 1,
     number: 21,
     value: 0,
-    picked: ''
+    picked: '',
   },
   {
     id: 4,
@@ -24,36 +54,45 @@ const companies = ref([
     cash: 1,
     number: 21,
     value: 0,
-    picked: ''
-  }
+    picked: '',
+  },
 ]);
 
 onMounted(async () => {
   try {
     const { data } = await API.getCompanies();
-    console.log(data)
+    console.log(data);
     // companies.value = data.data;
   } catch (e) {
     console.error(e);
   }
-})
+});
+
+const getGameState = async () => {
+  try {
+    const { data } = await API.getGame();
+    currentRound.value = data.currentRound;
+  } catch (e) {
+    console.error(e);
+  }
+};
 
 const updateValue = ({ index, value }) => {
   companies.value[index].value = value;
-}
+};
 
 const updatePicked = ({ index, picked }) => {
   companies.value[index].picked = picked;
-}
+};
 
-const makeActionPapers = async () => {  
-  const ids = companies.value.map(company => company.id)
-  const papers = companies.value.map(company => {
+const makeActionPapers = async () => {
+  const ids = companies.value.map((company) => company.id);
+  const papers = companies.value.map((company) => {
     if (company.picked === 'sell') {
-      return company.value * -1
+      return company.value * -1;
     }
-    return company.value
-  })
+    return company.value;
+  });
   const result = ids.reduce((acc, key, index) => {
     acc[key] = papers[index];
     return acc;
@@ -61,49 +100,37 @@ const makeActionPapers = async () => {
   try {
     const { data } = await API.buyPapers({
       id: teamId,
-      sharesChanges: result
+      sharesChanges: result,
     });
   } catch (e) {
     console.error(e);
   }
-}
-
+};
 </script>
 
 <template>
   <div class="container">
     <div class="left-column">
       <div class="round-info">
-        <div>Раунд №</div>
+        <div>Раунд № {{ currentRound }}</div>
         <div>Таймер</div>
       </div>
       <div class="balance-info">
-        <div>Текущий баланс: </div>
+        <div>Текущий баланс:</div>
       </div>
       <div class="company-info">
         <div class="header">Заявка "Брокеру-Банку"</div>
         <v-table class="table">
           <thead>
             <tr>
-              <th>
-                Название компании
-              </th>
-              <th>
-                Стоимость акции
-              </th>
-              <th>
-                Текущее количество
-              </th>
-              <th>
-                Действия
-              </th>
+              <th>Название компании</th>
+              <th>Стоимость акции</th>
+              <th>Текущее количество</th>
+              <th>Действия</th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="(item, companyIndex) in companies"
-              :key="item.name"
-            >
+            <tr v-for="(item, companyIndex) in companies" :key="item.name">
               <td>{{ item.name }}</td>
               <td>{{ item.cash }}</td>
               <td>{{ item.number }}</td>
@@ -112,7 +139,7 @@ const makeActionPapers = async () => {
                   class="cash-info"
                   :options="{
                     name: item.name,
-                    index: companyIndex
+                    index: companyIndex,
                   }"
                   @update-value="updateValue"
                   @update-picked="updatePicked"
@@ -123,15 +150,12 @@ const makeActionPapers = async () => {
         </v-table>
       </div>
       <div>
-        <button
-          class="button"
-          @click="makeActionPapers"
-        >
+        <button class="button" :disabled="!isTradeGo" @click="makeActionPapers">
           Подтвердить
         </button>
       </div>
     </div>
-    <div style="width: 30px;"></div>
+    <div style="width: 30px"></div>
     <div class="right-column">
       <div>
         <div class="news block">
@@ -148,14 +172,6 @@ const makeActionPapers = async () => {
           <div class="block__buttons">
             <button class="button block__button">Купить за 50</button>
             <button class="button block__button">Посмотреть купленные</button>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div class="events block">
-          <div class="block__title">Случайные события</div>
-          <div class="block__buttons">
-            <button class="button block__button">Активировать</button>
           </div>
         </div>
       </div>
@@ -212,8 +228,6 @@ const makeActionPapers = async () => {
   padding: 10px 15px;
 }
 
-
-
 .button {
   background: lightblue;
   border: 1px solid black;
@@ -233,8 +247,6 @@ const makeActionPapers = async () => {
   align-items: center;
   column-gap: 10px;
 }
-
-
 
 .block {
   display: flex;
