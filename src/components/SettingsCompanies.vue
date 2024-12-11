@@ -15,7 +15,7 @@
 
               <v-card-text>
                 <v-text-field
-                  v-model="editedItem.name"
+                  v-model="companies.name"
                   label="Название компании"
                 ></v-text-field>
                 <v-text-field
@@ -103,8 +103,11 @@ const headers = ref([
   },
 ]);
 
+defineProps({
+  companies: [],
+})
 
-const companies = ref([]);
+const companiesHui = ref([]);
 
 onMounted(async () => {
   try {

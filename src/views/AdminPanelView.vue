@@ -49,6 +49,8 @@ const isRegistrationOpen = ref(false)
 const isGameStarted = ref(false)
 
 onMounted(async () => {
+  getCompanies()
+
   try {
     const {data} = await API.getGame();
     console.log(data);
@@ -154,10 +156,53 @@ const endGame = async () => {
 const activeTeam = ref(null);
 
 const openTeamInfo = async (teamId) => {
-  const data = await API.getTeam({teamId});
-  activeTeam.value = data;
-  console.log(data.data.shares.keys());
+  const response = await API.getTeam({teamId})
+  if (response.status != 200 ) {
+    alert("error on load companies")
+    return
+  }
+  activeTeam.value = response.data
+  if (response.data.shares) {
+    const companyIds = Object.keys(response.data.shares)
+    const companyShareCount = Object.values(response.data.shares)
+    activeTeam.value.shares = []
+    for (let i = 0; i < companyIds.length; i++) {
+      const company = getCompanyById(Number(companyIds[i]))
+      const rounds = Object.keys(company.shares)
+      const costs = Object.values(company.shares)
+      const round = String(roundNumber.value)
+      const costId = rounds.find(item => item === round)
+      const item = {
+        "companyName": company.name,
+        "count": companyShareCount[i],
+        "cost": costs[costId]
+      }
+      activeTeam.value.shares.push(item)
+    }
+    console.log(activeTeam.value)
+  } else {
+    console.log("bad response - empty shares")
+  }
 };
+
+const companies = ref([])
+
+async function getCompanies() {
+  try {
+    const response = await API.getCompanies();
+    if (response.status != 200) {
+      alert("error on load companies")
+      return
+    }
+    companies.value = response.data.data
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function getCompanyById(id) {
+  return companies.value.find((item) => item.id === id)
+}
 
 const closeModal = () => {
   activeTeam.value = null;
@@ -165,10 +210,10 @@ const closeModal = () => {
 
 const totalMoney = (activeTeam) => {
   const sharesTotal = activeTeam.shares.reduce((total, share) => {
-    return total + (share.price * share.count); 
+    return total + (share.cost * share.count); 
   }, 0);
 
-  return sharesTotal + activeTeam.money;
+  return sharesTotal + activeTeam.balanceAmount;
 };
 
 // ----------------------- Shares Load --------------------------
@@ -313,16 +358,16 @@ const formatTime = (time) => {
         </thead>
         <tbody>
           <tr v-for="(share, index) in activeTeam.shares" :key="index">
-            <td>{{ share.name }}</td>
+            <td>{{ share.companyName }}</td>
             <td>{{ share.count }}</td>
-            <td>{{ share.price }}</td>
-            <td>{{ share.count * share.price }}</td>
+            <td>{{ share.cost }}</td>
+            <td>{{ share.count * share.cost }}</td>
           </tr>
         </tbody>
       </table>
 
-        <h3 style="text-align: left;">Оставшиеся деньги: {{ activeTeam.balanceAmount }} </h3>
-        <!-- <h3 style="text-align: left;">Суммарный капитал: {{ totalMoney(activeTeam) }} </h3> -->
+        <h3 style="text-align: left; margin-top: 15px;">Оставшиеся деньги: {{ activeTeam.balanceAmount }} </h3>
+        <h3 style="text-align: left;">Суммарный капитал: {{ totalMoney(activeTeam) }} </h3>
         <button style="margin-top: 10px;" @click="closeModal">Закрыть</button>
       </div>
     </div>
@@ -411,8 +456,10 @@ const formatTime = (time) => {
     </button>
     </div>  
 
+    <div class="companies_container">
+      <SettingsCompanies v-show="isGameCreated" :companies="companies" class="active-game-section" />
+    </div>
 
-    <SettingsCompanies v-show="isGameCreated" class="active-game-section"/>
   </div>
 </template>
 
@@ -530,5 +577,9 @@ const formatTime = (time) => {
 
 .team-table th {
   background-color: #f4f4f4;
+}
+
+.companies_container {
+  padding: 100px 0 100px 0;
 }
 </style>
