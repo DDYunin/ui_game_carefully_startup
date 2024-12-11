@@ -12,6 +12,8 @@ axios.interceptors.request.use((config) => {
   return config
 })
 
+axios.defaults.withCredentials = true
+
 axios.interceptors.response.use((response) => {
   return response
 }, async function (error) {
