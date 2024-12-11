@@ -1,6 +1,6 @@
 <template>
   <div class="wrapper">
-    <v-data-table :headers="headers" :items="desserts" hide-default-footer>
+    <v-data-table :headers="headers" :items="companies" hide-default-footer>
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Компании</v-toolbar-title>
@@ -109,7 +109,8 @@ const companies = ref([]);
 onMounted(async () => {
   try {
     const { data } = await API.getCompanies();
-    console.log(data)
+    console.log(data.data)
+    companies.value = data.data.map(fromBackToFront);
   } catch (e) {
     console.error(e);
   }
@@ -170,16 +171,21 @@ const formTitle = computed(() => {
 
 const editItem = (item) => {
   debugger
-  editedIndex.value = desserts.value.findIndex(dessert => {
-    return dessert.name === item.name;
+  editedIndex.value = companies.value.findIndex(company => {
+    return company.id === item.id;
   });
   Object.assign(editedItem, item);
   dialog.value = true;
 };
 
-const deleteItem = (item) => {
-  editedIndex.value = desserts.value.findIndex(dessert => {
-    return dessert.name === item.name;
+const deleteItem = async (item) => {
+  try {
+    await API.deleteCompany(item.id);
+  } catch (e) {
+    console.error(e);
+  }
+  editedIndex.value = companies.value.findIndex(company => {
+    return company.id === item.id;
   });
   Object.assign(editedItem, {
     name: '',
@@ -191,25 +197,51 @@ const deleteItem = (item) => {
 };
 
 const deleteItemConfirm = () => {
-  desserts.value.splice(editedIndex.value, 1);
+  companies.value.splice(editedIndex.value, 1);
   dialogDelete.value = false;
 };
 
-const save = () => {
+const save = async () => {
   if (editedIndex.value > -1) {
-    console.log(editedItem.value)
-    Object.assign(desserts.value[editedIndex.value], editedItem);
+    await API.updateCompany(fromFrontToBack(editedItem), companies.value[editedIndex.value].id);
+    Object.assign(companies.value[editedIndex.value], editedItem);
   } else {
-    desserts.value.push({...editedItem});
-    Object.assign(editedItem, {
-      name: '',
-      cash1: 0,
-      cash2: 0,
-      cash3: 0
-    });
+    try {
+      const { data } = await API.createCompany(fromFrontToBack(editedItem));
+      companies.value.push(fromBackToFront(data));
+      Object.assign(editedItem, {
+        name: '',
+        cash1: 0,
+        cash2: 0,
+        cash3: 0
+      });
+    } catch (e) {
+      console.error(e);
+    }
   }
   dialog.value = false;
 };
+
+const fromBackToFront = (item) => {
+  return {
+    id: item.id,
+    name: item.name,
+    cash1: item.shares[1],
+    cash2: item.shares[2],
+    cash3: item.shares[3]
+  }
+}
+
+const fromFrontToBack = (item) => {
+  return {
+    name: item.name,
+    shares: {
+      1: Number(item.cash1),
+      2: Number(item.cash2),
+      3: Number(item.cash3)
+    }
+  }
+}
 </script>
 
 <style scoped>

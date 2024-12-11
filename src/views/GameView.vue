@@ -3,6 +3,7 @@ import { API } from '@/api/api-service';
 import { onMounted, ref } from 'vue';
 import ActionPaper from '@/components/ActionPaper.vue';
 import { jwtDecode } from "jwt-decode";
+import socket from '@/api/ws-api-service';
 
 
 const tokens = JSON.parse(localStorage.getItem('userTokens'))
@@ -30,6 +31,8 @@ const companies = ref([
 onMounted(async () => {
   try {
     const { data } = await API.getCompanies();
+    console.log(data)
+    // companies.value = data.data;
   } catch (e) {
     console.error(e);
   }

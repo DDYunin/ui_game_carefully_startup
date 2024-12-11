@@ -47,6 +47,9 @@ class ApiService {
     return axios.get(this.#createUrl('game'), options);
   }
 
+
+  // Companies START
+
   createCompany(options) {
     return axios.post(this.#createUrl('company'), options);
   }
@@ -54,6 +57,16 @@ class ApiService {
   getCompanies() {
     return axios.get(this.#createUrl('company'))
   }
+
+  updateCompany(options, company) {
+    return axios.put(this.#createUrl(`company/${company}`), options)
+  }
+
+  deleteCompany(company) {
+    return axios.patch(this.#createUrl(`company/${company}`))
+  }
+
+  // Companies END
 
   registration(options) {
     return axios.post(this.#createUrl('auth/registration'), options)
