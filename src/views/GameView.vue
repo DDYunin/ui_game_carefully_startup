@@ -5,9 +5,12 @@ import ActionPaper from '@/components/ActionPaper.vue';
 import { jwtDecode } from 'jwt-decode';
 import { socket } from '@/api/ws-api-service';
 
-const currentRound = ref(0);
+
+const tokens = JSON.parse(localStorage.getItem('userTokens'));
+const { sub: teamId, name: teamName } = jwtDecode(tokens.token);
+
+const currentRound = ref(1);
 const balanceAmount = ref();
-const papersByCompanies = ref([])
 const isTradeGo = ref('');
 const isGameGo = ref('');
 const isRoundGo = ref('');
@@ -16,7 +19,7 @@ watch(isRoundGo, async (newIsRoundGo, oldIsRoundGo) => {
   if (newIsRoundGo) {
     console.log('Я в watcher-e ', newIsRoundGo);
     getGameState();
-    getCompanies();
+    getCompaniesAndTeam();
   }
 });
 
@@ -37,45 +40,11 @@ socket.onmessage = (event) => {
   console.log('event, ', data, Object.keys(data));
 };
 
-const tokens = JSON.parse(localStorage.getItem('userTokens'));
-const { sub: teamId, name: teamName } = jwtDecode(tokens.token);
-
-const companies = ref([
-  {
-    id: 2,
-    name: 'as',
-    cash: 1,
-    number: 21,
-    value: 0,
-    picked: '',
-  },
-  {
-    id: 4,
-    name: 'asa',
-    cash: 1,
-    number: 21,
-    value: 0,
-    picked: '',
-  },
-]);
-
-const companiesForTable = computed(() => {
-  return companies.value.map(company => {
-    return {
-      id: company.id,
-      name: company.name,
-      cash: company.shares?.[currentRound.value],
-      number: papersByCompanies.value?.[company.id],
-      value: company.value,
-      picked: company.picked
-    }
-  })
-});
+const isTradeDone = ref(false);
 
 onMounted(() => {
   getGameState();
-  getCompanies();
-  getCommandInfo();
+  getCompaniesAndTeam();
 });
 
 const getGameState = async () => {
@@ -88,50 +57,10 @@ const getGameState = async () => {
   }
 };
 
-// shares ключи - id компаний, а 
-
-const getCommandInfo = async () => {
-  try {
-    const { data } = await API.getTeam({
-      teamId
-    });
-    console.log('Data from getCommandInfo = ', data);
-    // Получаю баланс
-    balanceAmount.value = data.balanceAmount;
-    papersByCompanies.value = data.shares;
-    // Понадобится:
-    // shares
-    // additionalInfoIds,
-    // additionalInfos
-    // balanceAmount
-  } catch (e) {
-    console.log(e);
-  }
-}
-
-const getCompanies = async () => {
-  try {
-    const { data } = await API.getCompanies();
-    console.log('Data from getCompanies = ', data);
-    // id, name, shares { номер раунда: стоимость }
-    companies.value = data.data;
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-const updateValue = ({ index, value }) => {
-  companies.value[index].value = value;
-};
-
-const updatePicked = ({ index, picked }) => {
-  companies.value[index].picked = picked;
-};
-
 const makeActionPapers = async () => {
   const ids = companiesForTable.value.map((company) => company.id);
   const papers = companiesForTable.value.map((company) => {
-    if (company.picked === 'sell') {
+    if (company.picked === 'sell' &&  company.value !== 0) {
       return company.value * -1;
     }
     return company.value;
@@ -148,10 +77,53 @@ const makeActionPapers = async () => {
     });
     console.log('Data from makeActionPapers = ', data)
     balanceAmount.value = data.balanceAmount;
+    getCompaniesAndTeam();
   } catch (e) {
     console.error(e);
   }
 };
+
+
+const resetOnStartRound = async () => {
+  try {
+    const { data } = await API.resetTrade({
+      teamId
+    });
+    console.log('Data from makeActionPapers = ', data)
+    balanceAmount.value = data.balanceAmount;
+    getCompaniesAndTeam();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+
+const companiesForTable = ref([]);
+
+const getCompaniesAndTeam = async () => {
+  try {
+    const [company, team] = await Promise.all([
+      API.getCompanies(),
+      API.getTeam({teamId})
+    ]);
+    console.log('Data from getCompanies = ', company.data);
+    console.log('Data from getCommandInfo = ', team.data);
+    balanceAmount.value = team.data.balanceAmount;
+    isTradeDone.value = team.data.hasTransactionInThisRound;
+    companiesForTable.value = company.data.data.map(company => {
+      return {
+        id: company.id,
+        name: company.name,
+        cash: company.shares[currentRound.value],
+        number: team.data.shares?.[company.id],
+        value: 0,
+        picked: 'sell'
+      }
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
 </script>
 
 <template>
@@ -187,8 +159,8 @@ const makeActionPapers = async () => {
                     name: item.name,
                     index: companyIndex,
                   }"
-                  @update-value="updateValue"
-                  @update-picked="updatePicked"
+                  v-model:number-value="item.value"
+                  v-model:radio-value="item.picked"
                 />
               </td>
             </tr>
@@ -197,10 +169,18 @@ const makeActionPapers = async () => {
       </div>
       <div>
         <button
-          class="button"
+          v-if="!isTradeDone"
+          class="button button__buy"
           @click="makeActionPapers"
         >
           Подтвердить
+        </button>
+        <button
+          v-else
+          class="button button__sell"
+          @click="resetOnStartRound"
+        >
+          Сбросить
         </button>
       </div>
     </div>

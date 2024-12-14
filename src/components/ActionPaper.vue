@@ -14,23 +14,8 @@ const emit = defineEmits([
   'update-picked'
 ])
 
-const value = ref(0);
-const picked = ref('sell')
-
-watch(value, (newVal) => {
-  emit('update-value', {
-    index: props.options.index,
-    value: newVal
-  });
-});
-
-watch(picked, (newPicked) => {
-  emit('update-picked', {
-    index: props.options.index,
-    picked: newPicked
-  });
-});
-
+const numberValue = defineModel('numberValue')
+const radioValue = defineModel('radioValue')
 
 
 </script>
@@ -41,15 +26,25 @@ watch(picked, (newPicked) => {
     <input
       type="number"
       class="input"
-      v-model="value"
+      v-model="numberValue"
       min="0"
     >
     <label>
-      <input type="radio" value="sell" :name="options.name" v-model="picked">
+      <input
+        type="radio"
+        value="sell"
+        :name="options.name"
+        v-model="radioValue"
+      >
       Продать
     </label>
     <label>
-      <input type="radio" value="buy" :name="options.name" v-model="picked">
+      <input
+        type="radio"
+        value="buy"
+        :name="options.name"
+        v-model="radioValue"
+      >
       Купить
     </label>
   </div>

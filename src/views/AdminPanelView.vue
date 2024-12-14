@@ -168,6 +168,7 @@ const openTeamInfo = async (teamId) => {
     alert("error on load companies")
     return
   }
+  debugger
   activeTeam.value = response.data
   if (response.data.shares) {
     const companyIds = Object.keys(response.data.shares)
@@ -175,14 +176,14 @@ const openTeamInfo = async (teamId) => {
     activeTeam.value.shares = []
     for (let i = 0; i < companyIds.length; i++) {
       const company = getCompanyById(Number(companyIds[i]))
-      const rounds = Object.keys(company.shares)
-      const costs = Object.values(company.shares)
-      const round = String(roundNumber.value)
-      const costId = rounds.find(item => item === round)
+      // const rounds = Object.keys(company.shares)
+      // const costs = Object.values(company.shares)
+      // const round = String(roundNumber.value)
+      // const costId = rounds.find(item => item === round)
       const item = {
-        "companyName": company.name,
-        "count": companyShareCount[i],
-        "cost": costs[costId]
+        companyName: company.name,
+        count: companyShareCount[i],
+        cost: company.shares[roundNumber.value]
       }
       activeTeam.value.shares.push(item)
     }

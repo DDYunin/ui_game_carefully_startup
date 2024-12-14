@@ -101,6 +101,10 @@ class ApiService {
     return axios.post(this.#createUrl('team/purchase'), options)
   }
 
+  resetTrade(options) {
+    return axios.post(this.#createUrl(`team/${options.teamId}/purchase/reset`))
+  }
+
   buyNew(options) {
     return axios.post(this.#createUrl(`team/purchase/additional-info/${options.teamId}`))
   }
