@@ -524,7 +524,13 @@ async function closeSettingsModal(needSaveSettings) {
     </div>  
 
     <div class="companies_container">
-      <SettingsCompanies v-show="isGameCreated" class="active-game-section" />
+      <SettingsCompanies
+        v-show="isGameCreated"
+        class="active-game-section"
+        :options="{
+          disableButtons: isGameStarted
+        }"
+      />
     </div>
 
   </div>

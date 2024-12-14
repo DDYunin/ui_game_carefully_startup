@@ -5,7 +5,13 @@
         <v-toolbar flat>
           <v-toolbar-title>Компании</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn variant="elevated" @click="dialog = true"> Добавить </v-btn>
+          <v-btn
+            variant="elevated"
+            @click="dialog = true"
+            :disabled="props.options.disableButtons"
+          >
+            Добавить
+          </v-btn>
 
           <v-dialog v-model="dialog" max-width="500px">
             <v-card>
@@ -63,10 +69,21 @@
         </v-toolbar>
       </template>
       <template v-slot:item.actions="{ item }">
-        <v-icon class="me-2" size="small" @click="editItem(item)">
+        <v-icon
+          class="me-2"
+          size="small"
+          @click="editItem(item)"
+          :disabled="props.options.disableButtons"
+        >
           mdi-pencil
         </v-icon>
-        <v-icon size="small" @click="deleteItem(item)"> mdi-delete </v-icon>
+        <v-icon
+          size="small"
+          @click="deleteItem(item)"
+          :disabled="props.options.disableButtons"
+        >
+          mdi-delete
+        </v-icon>
       </template>
     </v-data-table>
   </div>
@@ -104,7 +121,9 @@ const headers = ref([
 ]);
 
 const props = defineProps({
-  companies: [],
+  options: {
+    type: Object,
+  }
 })
 
 const companies = ref([])
