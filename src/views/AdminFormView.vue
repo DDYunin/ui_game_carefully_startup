@@ -21,7 +21,8 @@ const enterToGame = async () => {
   try {
     await authStore.signIn({
       teamName: teamName.value,
-      password: password.value
+      password: password.value,
+      isAdmin: true
     });
 
     router.push({

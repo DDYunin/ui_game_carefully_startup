@@ -83,7 +83,6 @@ const makeActionPapers = async () => {
   }
 };
 
-
 const resetOnStartRound = async () => {
   try {
     const { data } = await API.resetTrade({
@@ -97,7 +96,6 @@ const resetOnStartRound = async () => {
   }
 }
 
-
 const companiesForTable = ref([]);
 
 const getCompaniesAndTeam = async () => {
@@ -110,6 +108,7 @@ const getCompaniesAndTeam = async () => {
     console.log('Data from getCommandInfo = ', team.data);
     balanceAmount.value = team.data.balanceAmount;
     isTradeDone.value = team.data.hasTransactionInThisRound;
+    additionalInfo.value = team.data.additionalInfos;
     companiesForTable.value = company.data.data.map(company => {
       return {
         id: company.id,
@@ -124,6 +123,33 @@ const getCompaniesAndTeam = async () => {
     console.error(e);
   }
 }
+
+// БЛОК НОВОСТЕЙ
+
+const isShowNews = ref(false);
+const additionalInfo = ref([]);
+
+const slides = ref([
+          'First',
+          'Second',
+          'Third',
+          'Fourth',
+          'Fifth',
+        ]);
+
+const buyNew = async () => {
+  try {
+    const { data } = await API.buyNew({
+      teamId
+    });
+    console.log('Data from buyNew = ', data)
+    balanceAmount.value = data.balanceAmount;
+    getCompaniesAndTeam();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 </script>
 
 <template>
@@ -190,12 +216,22 @@ const getCompaniesAndTeam = async () => {
         <div class="news block">
           <div class="block__title">Новости</div>
           <div class="block__buttons">
-            <button class="button block__button">Купить за 10</button>
-            <button class="button block__button">Посмотреть купленные</button>
+            <button
+              class="button block__button"
+              @click="buyNew"
+            >
+              Купить за 10
+            </button>
+            <button
+              class="button block__button"
+              @click="isShowNews = true"
+            >
+              Посмотреть купленные
+            </button>
           </div>
         </div>
       </div>
-      <div>
+      <!-- <div>
         <div class="analytic block">
           <div class="block__title">Аналитика</div>
           <div class="block__buttons">
@@ -203,10 +239,52 @@ const getCompaniesAndTeam = async () => {
             <button class="button block__button">Посмотреть купленные</button>
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
+    <v-dialog
+      v-model="isShowNews"
+      >
+        <v-card>
+          <v-card-title>
+            <span class="text-h5">Купленные новости</span>
+          </v-card-title>
+          <v-card-text>
+            <v-carousel
+              progress="primary"
+              hide-delimiters
+            >
+              <v-carousel-item
+                v-for="info in additionalInfo"
+                :key="info.id"
+              >
+                <v-sheet
+                  height="100%"
+                >
+                  <div class="d-flex fill-height justify-center align-center">
+                    <div class="text-h2">
+                      {{ info.name }} Slide
+                    </div>
+                  </div>
+                </v-sheet>
+              </v-carousel-item>
+            </v-carousel>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn
+              @click="isShowNews = false"
+              color="red-darken-2"
+            >
+              Закрыть
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
   </div>
 </template>
+
+
+
+
 
 <style scoped>
 .container {

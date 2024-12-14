@@ -532,7 +532,6 @@ async function closeSettingsModal(needSaveSettings) {
         }"
       />
     </div>
-
   </div>
 </template>
 
