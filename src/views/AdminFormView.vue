@@ -28,21 +28,42 @@ const enterToGame = async () => {
       name: 'admin-panel',
     })
   } catch(e) {
-    haveError.value = true;
-    errorMessage.value = 'Ошибка на этапе входа';
-    setTimeout(() => {
-      haveError.value = false
-    }, 5000)
+    unsuccessSignInNotify.value = true
     console.error(e)
   } finally {
     teamName.value = '';
     password.value = '';
   }
 }
+
+const unsuccessSignInNotify = ref(false)
+
 </script>
 
 <template>
   <div class="container">
+
+    <v-dialog
+      v-model="unsuccessSignInNotify"
+      width="auto"
+    >
+      <v-card
+        max-width="400"
+        prepend-icon="mdi-emoticon-cry-outline"
+        text="Неправильный логин или пароль"
+        title="Неудача!"
+      >
+        <template v-slot:actions>
+          <v-btn
+            class="ms-auto"
+            text="Ok"
+            @click="unsuccessSignInNotify = false"
+          ></v-btn>
+        </template>
+      </v-card>
+    </v-dialog>
+
+
     <div class="form">
       <header class="header">Войти в панель администратора</header>
       <div class="body">

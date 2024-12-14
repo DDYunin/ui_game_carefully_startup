@@ -30,42 +30,111 @@ const enterToGame = async () => {
       name: 'team',
     })
   } catch(e) {
-    haveError.value = true;
-    errorMessage.value = 'Ошибка на этапе входа';
-    setTimeout(() => {
-      haveError.value = false
-    }, 5000)
-    console.error(e)
+    unsuccessSignInNotify.value = true
   } finally {
     teamName.value = '';
     password.value = '';
   }
 }
 
-
-const createTeam = async () => {
-  try {
-    await API.registration({
+async function createTeam() {
+  await API.registration({
       teamName: teamName.value,
       password: password.value
-    });
-  } catch(e) {
-    haveError.value = true;
-    errorMessage.value = 'Ошибка на этапе регистрации';
-    setTimeout(() => {
-      haveError.value = false
-    }, 5000)
-    console.error(e)
-  } finally {
-    teamName.value = '';
-    password.value = '';
+  }).then(function(response) {
+    handleCreateResponse(response)
+  }).catch(function(error){
+    console.error(error)
+  })
+}
+
+const noRegistrationPeriodNotify = ref(false)
+const successRegistrationNotify = ref(false)
+
+function handleCreateResponse(response) {
+  if (response.status == 400) {
+    noRegistrationPeriodNotify.value = true
+    return
   }
 
+  if (response.status == 201) {
+    successRegistrationNotify.value = true
+  }
 }
+
+const unsuccessSignInNotify = ref(false)
+
 </script>
 
 <template>
   <div class="container">
+
+
+
+    <v-dialog
+      v-model="noRegistrationPeriodNotify"
+      width="auto"
+    >
+      <v-card
+        max-width="400"
+        prepend-icon="mdi-alert"
+        text="На текущий момент регистрация закрыта."
+        title="Неудачно!"
+      >
+        <template v-slot:actions>
+          <v-btn
+            class="ms-auto"
+            text="Ok"
+            @click="noRegistrationPeriodNotify = false"
+          ></v-btn>
+        </template>
+      </v-card>
+    </v-dialog>
+
+
+
+    <v-dialog
+      v-model="successRegistrationNotify"
+      width="auto"
+    >
+      <v-card
+        max-width="400"
+        prepend-icon="mdi-check"
+        text="Команда зарегистирована успешно!"
+        title="Успех!"
+      >
+        <template v-slot:actions>
+          <v-btn
+            class="ms-auto"
+            text="Ok"
+            @click="successRegistrationNotify = false"
+          ></v-btn>
+        </template>
+      </v-card>
+    </v-dialog>
+
+
+    <v-dialog
+      v-model="unsuccessSignInNotify"
+      width="auto"
+    >
+      <v-card
+        max-width="400"
+        prepend-icon="mdi-emoticon-cry-outline"
+        text="Неправильное название команды или пароль"
+        title="Неудача!"
+      >
+        <template v-slot:actions>
+          <v-btn
+            class="ms-auto"
+            text="Ok"
+            @click="unsuccessSignInNotify = false"
+          ></v-btn>
+        </template>
+      </v-card>
+    </v-dialog>
+
+
     <div class="form">
       <header class="header">Начать игру</header>
       <div class="body">
