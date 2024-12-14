@@ -92,6 +92,10 @@ class ApiService {
   buyPapers(options) {
     return axios.post(this.#createUrl('team/purchase'), options)
   }
+
+  buyNew(options) {
+    return axios.post(this.#createUrl(`team/purchase/additional-info/${options.teamId}`))
+  }
   // Public methods
 
   refreshToken() {

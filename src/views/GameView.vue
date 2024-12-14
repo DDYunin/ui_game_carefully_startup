@@ -1,12 +1,13 @@
 <script setup>
 import { API } from '@/api/api-service';
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import ActionPaper from '@/components/ActionPaper.vue';
 import { jwtDecode } from 'jwt-decode';
 import { socket } from '@/api/ws-api-service';
-import { GAME_STATES } from '@/constants';
 
-const currentRound = ref(1);
+const currentRound = ref(0);
+const balanceAmount = ref();
+const papersByCompanies = ref([])
 const isTradeGo = ref('');
 const isGameGo = ref('');
 const isRoundGo = ref('');
@@ -14,24 +15,24 @@ const isRoundGo = ref('');
 watch(isRoundGo, async (newIsRoundGo, oldIsRoundGo) => {
   if (newIsRoundGo) {
     console.log('Я в watcher-e ', newIsRoundGo);
-    await getGameState();
+    getGameState();
+    getCompanies();
   }
 });
 
 socket.onmessage = (event) => {
   const data = JSON.parse(event.data);
-  let [key, value] = Object.entries(data);
-  debugger;
-  if (key[0] === 'isTradeStage') {
-    isTradeGo.value = value[0];
+  const [key, value] = Object.entries(data)[0];
+  if (key === 'isTradeStage') {
+    isTradeGo.value = value;
   }
   // Автоматически перекинуть на страницу игры
-  if (key[0] === 'gameState') {
-    isGameGo.value = value[0];
+  if (key === 'gameState') {
+    isGameGo.value = value;
   }
   // Для просчёта следующего раунда
-  if (key[0] === 'isRoundStage') {
-    isRoundGo.value = value[0];
+  if (key === 'isRoundStage') {
+    isRoundGo.value = value;
   }
   console.log('event, ', data, Object.keys(data));
 };
@@ -58,24 +59,66 @@ const companies = ref([
   },
 ]);
 
-onMounted(async () => {
-  try {
-    const { data } = await API.getCompanies();
-    console.log(data);
-    // companies.value = data.data;
-  } catch (e) {
-    console.error(e);
-  }
+const companiesForTable = computed(() => {
+  return companies.value.map(company => {
+    return {
+      id: company.id,
+      name: company.name,
+      cash: company.shares?.[currentRound.value],
+      number: papersByCompanies.value?.[company.id],
+      value: 0,
+      picked: ''
+    }
+  })
+});
+
+onMounted(() => {
+  getGameState();
+  getCompanies();
+  getCommandInfo();
 });
 
 const getGameState = async () => {
   try {
     const { data } = await API.getGame();
+    console.log('Data in getGameState = ', data)
     currentRound.value = data.currentRound;
   } catch (e) {
     console.error(e);
   }
 };
+
+// shares ключи - id компаний, а 
+
+const getCommandInfo = async () => {
+  try {
+    const { data } = await API.getTeam({
+      teamId
+    });
+    console.log('Data from getCommandInfo = ', data);
+    // Получаю баланс
+    balanceAmount.value = data.balanceAmount;
+    papersByCompanies.value = data.shares;
+    // Понадобится:
+    // shares
+    // additionalInfoIds,
+    // additionalInfos
+    // balanceAmount
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+const getCompanies = async () => {
+  try {
+    const { data } = await API.getCompanies();
+    console.log('Data from getCompanies = ', data);
+    // id, name, shares { номер раунда: стоимость }
+    companies.value = data.data;
+  } catch (e) {
+    console.error(e);
+  }
+}
 
 const updateValue = ({ index, value }) => {
   companies.value[index].value = value;
@@ -86,8 +129,8 @@ const updatePicked = ({ index, picked }) => {
 };
 
 const makeActionPapers = async () => {
-  const ids = companies.value.map((company) => company.id);
-  const papers = companies.value.map((company) => {
+  const ids = companiesForTable.value.map((company) => company.id);
+  const papers = companiesForTable.value.map((company) => {
     if (company.picked === 'sell') {
       return company.value * -1;
     }
@@ -97,11 +140,13 @@ const makeActionPapers = async () => {
     acc[key] = papers[index];
     return acc;
   }, {});
+  debugger
   try {
     const { data } = await API.buyPapers({
       id: teamId,
       sharesChanges: result,
     });
+    console.log('Data from makeActionPapers = ', data)
   } catch (e) {
     console.error(e);
   }
@@ -116,7 +161,7 @@ const makeActionPapers = async () => {
         <div>Таймер</div>
       </div>
       <div class="balance-info">
-        <div>Текущий баланс:</div>
+        <div>Текущий баланс: {{ balanceAmount }}</div>
       </div>
       <div class="company-info">
         <div class="header">Заявка "Брокеру-Банку"</div>
@@ -130,7 +175,7 @@ const makeActionPapers = async () => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, companyIndex) in companies" :key="item.name">
+            <tr v-for="(item, companyIndex) in companiesForTable" :key="item.id">
               <td>{{ item.name }}</td>
               <td>{{ item.cash }}</td>
               <td>{{ item.number }}</td>
@@ -150,7 +195,10 @@ const makeActionPapers = async () => {
         </v-table>
       </div>
       <div>
-        <button class="button" :disabled="!isTradeGo" @click="makeActionPapers">
+        <button
+          class="button"
+          @click="makeActionPapers"
+        >
           Подтвердить
         </button>
       </div>

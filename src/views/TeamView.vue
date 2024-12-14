@@ -1,20 +1,34 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { API } from '@/api/api-service';
 import { jwtDecode } from "jwt-decode";
+import { socket } from '@/api/ws-api-service';
 
-
+const isGameStart = ref('')
 const router = useRouter();
-
 
 const tokens = JSON.parse(localStorage.getItem('userTokens'))
 const { sub: teamId, name: teamName} = jwtDecode(tokens.token);
 
-
-console.log(teamName, teamId);
-
 const items = ref([]);
+
+socket.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  const [key, value] = Object.entries(data)[0];
+  // Автоматически перекинуть на страницу игры
+  if (key === 'gameState') {
+    isGameStart.value = value === 2 ? true : false;
+  }
+};
+
+watch(isGameStart, async (isGameStartNew, isGameStartOld) => {
+  if (isGameStartNew) {
+    router.push({
+      name: 'game'
+    })
+  }
+});
 
 onMounted(async () => {
   try {
@@ -79,7 +93,6 @@ const updateTeam = async () => {
       name: teamName,
       members: items.value.map(item => item.member)
     })
-    console.log('Победа')
     toggleReady(true)
   } catch (e) {
     console.error(e)
@@ -88,15 +101,6 @@ const updateTeam = async () => {
 
 </script>
 
-<!-- <v-btn
-append-icon="mdi-keyboard-backspace"
-@click="router.push({name: 'home'})"
-:style="{
-  marginBottom: '30px'
-}"
->
-Назад
-</v-btn> -->
 
 <template>
   <div class="container">
@@ -145,8 +149,6 @@ append-icon="mdi-keyboard-backspace"
         </div>
       </div>
       <footer class="footer">
-        <p>
-          Ваш баланс: <span :style="{fontWeight: 700}">600 у.е.</span> </p>
         <p
           v-if="isReady"
         >
