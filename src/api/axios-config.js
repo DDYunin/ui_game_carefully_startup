@@ -22,5 +22,7 @@ axios.interceptors.response.use((response) => {
     originalRequest._retry = true;
     const response = await API.refreshToken()
     console.log('test ', response)
+  } else {
+    return error
   }
 })
