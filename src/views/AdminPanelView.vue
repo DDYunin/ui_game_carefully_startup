@@ -59,19 +59,23 @@ onMounted(async () => {
       isGameCreated.value = false;
       isRegistrationOpen.value = false;
       isGameStarted.value = false;
+      needSettingsButton.value = false;
     } else if(data.state == -1) { // 
       getTeams();
+      needSettingsButton.value = true;
       isGameCreated.value = true;
       isRegistrationOpen.value = false;
     } else if(data.state == 2) {
       isGameStarted.value = true;
       isGameCreated.value = true;
+      needSettingsButton.value = false;
       getTeams();
       // Видимо перезагрузили страничку и игра уже идет, поэтому нужно обновить всю инфу по командам и компаниям
     } else if(data.state == 1) {
       isGameCreated.value = true;
       isRegistrationOpen.value = true;
       teamFetcher.value = setInterval(() => { getTeams() }, 5000);
+      needSettingsButton.value = true;
     }
   } catch(e) {
     console.error(e);
@@ -99,6 +103,7 @@ const createGame = async() => {
     isGameCreated.value = true;
     isRegistrationOpen.value = false;
     console.log(data);
+    needSettingsButton.value = true
   } catch(e) {
     console.log(e);
   }
@@ -133,6 +138,7 @@ const startGame = async () => {
       const {data} = await API.startGame();
       isGameStarted.value = true;
       isGameCreated.value = true;
+      needSettingsButton.value = false
       console.log(data);
     } catch(e) {
       console.log(e);
@@ -145,6 +151,7 @@ const endGame = async () => {
       isGameCreated.value = false;
       isRegistrationOpen.value = false;
       isGameStarted.value = false;
+      needSettingsButton.value = false
       teamsShortInfo.value = [];
     console.log(data);
   } catch(e) {
@@ -298,6 +305,35 @@ const formatTime = (time) => {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 };
 
+
+
+const settingsModalIsOpened = ref(false)
+const settings = ref({})
+const needSettingsButton = ref(false)
+
+async function openSettingsModal() {
+  settingsModalIsOpened.value = true
+  try {
+    const {data} = await API.getSetting();  
+    settings.value = data
+  } catch(e) {
+    console.log(e);
+  }
+}
+
+async function closeSettingsModal(needSaveSettings) {
+  settingsModalIsOpened.value = false
+  if (!needSaveSettings) {
+    return
+  }
+
+  try {
+    await API.updateSetting(settings.value);  
+  } catch(e) {
+    console.log(e);
+  }
+}
+
 </script>
 
 <template>
@@ -371,6 +407,40 @@ const formatTime = (time) => {
         <button style="margin-top: 10px;" @click="closeModal">Закрыть</button>
       </div>
     </div>
+
+
+    <button v-if="needSettingsButton" class="row-button" @click="openSettingsModal">  Настройки </button>
+
+    <div class="modal-overlay" v-if="settingsModalIsOpened">
+      <div class="settings-modal">
+        <h2>Настройки</h2>
+        <table class="settings-table" >
+          <tr>
+            <td class="settings-table-item"> Количество раундов </td>
+            <td class="settings-table-item"> {{settings.roundsCount}} </td>
+          </tr>
+          <tr style="margin-top: 20px;">
+            <td class="settings-table-item"> Продолжительность торгов </td>
+            <td class="settings-table-item"> {{settings.roundsDuration}} </td>
+          </tr>
+          <tr style="margin-top: 20px;">
+            <td class="settings-table-item"> Дефолтный баланс команд </td>
+            <td class="settings-table-item"> <input type="number" class="settings-input" v-model="settings.defaultBalance"> </td>
+          </tr>
+          <tr style="margin-top: 20px;">
+            <td class="settings-table-item"> Ссылка на pdf </td>
+            <td class="settings-table-item"> <input type="text" class="settings-input" v-model="settings.linkToPdf"> </td>
+          </tr>
+        </table>
+        <div style="display: flex; flex-direction: row; margin-top: 170px">
+          <button @click="closeSettingsModal(false)">Закрыть без сохранения</button>
+          <button style="margin-left: 20px;" @click="closeSettingsModal(true)">Сохранить</button>
+        </div>
+      </div>
+    </div>
+
+
+
 
     <!-- Кнопки управления открытия и закрытия регистрации -->
       <div style="flex-direction: row;">
@@ -581,5 +651,33 @@ const formatTime = (time) => {
 
 .companies_container {
   padding: 100px 0 100px 0;
+}
+
+.settings-modal {
+  width: 70%;
+  height: 70%;
+  background-color: white;
+  padding: 30px;
+}
+.settings-table {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+  margin-top: 50px;
+  margin-left: 0;
+  width: 70%;
+} 
+.settings-table-item {
+  width: 300px;
+  flex-grow: 1;
+}
+.settings-input {
+  width: 100%;
+  border-bottom: 1px solid #000;
+}
+.settings-input:focus {
+  border: 0;
 }
 </style>

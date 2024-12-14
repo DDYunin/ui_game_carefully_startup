@@ -52,6 +52,14 @@ class ApiService {
     return axios.get(this.#createUrl('game'), options);
   }
 
+  getSetting(options) {
+    return axios.get(this.#createUrl('settings'), options)
+  }
+  
+  updateSetting(options) {
+    return axios.put(this.#createUrl('settings'), options)
+  }
+
 
   // Companies START
 
