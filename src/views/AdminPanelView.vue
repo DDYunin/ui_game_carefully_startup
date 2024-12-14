@@ -176,10 +176,6 @@ const openTeamInfo = async (teamId) => {
     activeTeam.value.shares = []
     for (let i = 0; i < companyIds.length; i++) {
       const company = getCompanyById(Number(companyIds[i]))
-      // const rounds = Object.keys(company.shares)
-      // const costs = Object.values(company.shares)
-      // const round = String(roundNumber.value)
-      // const costId = rounds.find(item => item === round)
       const item = {
         companyName: company.name,
         count: companyShareCount[i],
@@ -528,7 +524,7 @@ async function closeSettingsModal(needSaveSettings) {
     </div>  
 
     <div class="companies_container">
-      <SettingsCompanies v-show="isGameCreated" :companies="companies" class="active-game-section" />
+      <SettingsCompanies v-show="isGameCreated" class="active-game-section" />
     </div>
 
   </div>

@@ -1,6 +1,6 @@
 <template>
   <div class="wrapper">
-    <v-data-table :headers="headers" :items="companiesFormatted" hide-default-footer>
+    <v-data-table :headers="headers" :items="companies" hide-default-footer>
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Компании</v-toolbar-title>
@@ -107,55 +107,17 @@ const props = defineProps({
   companies: [],
 })
 
-const companiesFormatted = computed (
-  () => {
-    return props.companies.map(fromBackToFront);
-  }
-)
+const companies = ref([])
 
 onMounted(async () => {
-  // const newArr = companies.map(fromBackToFront);
-  // console.log(newArr)
+  try {
+    const { data } = await API.getCompanies();
+    console.log(data.data)
+    companies.value = data.data.map(fromBackToFront);
+  } catch (e) {
+    console.error(e);
+  }
 });
-
-const desserts = ref([
-  {
-    name: 'Frozen Yogurt',
-    cash1: 159,
-    cash2: 6.0,
-    cash3: 24
-  },
-  {
-    name: 'Ice cream sandwich',
-    cash1: 237,
-    cash2: 9.0,
-    cash3: 37
-  },
-  {
-    name: 'Eclair',
-    cash1: 262,
-    cash2: 16.0,
-    cash3: 23
-  },
-  {
-    name: 'Cupcake',
-    cash1: 305,
-    cash2: 3.7,
-    cash3: 67
-  },
-  {
-    name: 'Gingerbread',
-    cash1: 356,
-    cash2: 16.0,
-    cash3: 49
-  },
-  {
-    name: 'Jelly bean',
-    cash1: 375,
-    cash2: 0.0,
-    cash3: 94
-  },
-]);
 
 const dialog = ref(false);
 const dialogDelete = ref(false);
