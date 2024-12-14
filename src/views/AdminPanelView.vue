@@ -3,41 +3,6 @@ import { onMounted,ref } from 'vue';
 import SettingsCompanies from '@/components/SettingsCompanies.vue';
 import { API } from '@/api/api-service';
 
-const teams = ref([
-  { 
-    name: 'Команда 1', 
-    members: ['Володя', 'Саня', 'Костян'], 
-    showMembers: false,
-    shares: [
-      {
-        name: "Средние рога",
-        price: 100,
-        count: 10
-      },
-      {
-        name: "Большие рога",
-        price: 200,
-        count: 10
-      },
-      {
-        name: "Маленькие рога",
-        price: 50,
-        count: 3
-      }
-
-    ],
-    money: 5000
-  },
-  { 
-    name: 'Команда 2', 
-    members: ['Стас', 'Влад'], 
-    shares: [
-
-    ],
-    showMembers: false,
-    money: 3000
-  },
-]);
 
 const teamsShortInfo = ref([
 ])
@@ -48,7 +13,9 @@ const isGameCreated = ref(false);
 const isRegistrationOpen = ref(false)
 const isGameStarted = ref(false)
 
-onMounted(async () => {
+
+
+const refreshState = async () => {
   getCompanies()
 
   try {
@@ -60,6 +27,7 @@ onMounted(async () => {
       isRegistrationOpen.value = false;
       isGameStarted.value = false;
       needSettingsButton.value = false;
+      roundState.value = RoundState.NOT_STARTED;
     } else if(data.state == -1) { // 
       getTeams();
       needSettingsButton.value = true;
@@ -68,9 +36,41 @@ onMounted(async () => {
     } else if(data.state == 2) {
       isGameStarted.value = true;
       isGameCreated.value = true;
+      const roundStateString = localStorage.getItem("roundState");
+      if(roundStateString == RoundState.ENDED) {
+        roundState.value = RoundState.ENDED;
+      } else if(roundStateString == RoundState.NOT_STARTED) {
+        roundState.value = RoundState.NOT_STARTED;
+      } else if(roundStateString == RoundState.IN_PROGRESS) {
+        roundState.value = RoundState.IN_PROGRESS;
+      }
       needSettingsButton.value = false;
       getTeams();
-      // Видимо перезагрузили страничку и игра уже идет, поэтому нужно обновить всю инфу по командам и компаниям
+      if(data.currentRound === 0) {
+        roundNumber.value = 1;
+      } else {
+        roundNumber.value = data.currentRound;
+      }
+      
+      if(data.tradeState == 1) {
+        transactionState.value = TransactionState.IN_PROGRESS;
+        remainingDurationTime.value = localStorage.getItem("remainingDurationTime");
+        timer.value = setInterval(() => {
+            if (remainingDurationTime.value > 0) {
+              remainingDurationTime.value -= 1;
+              localStorage.setItem("remainingDurationTime", remainingDurationTime.value.toString());
+            } else {
+              endTransaction();
+            }
+          }, 1000);
+      } else { // торги завершены или не начаты
+        const transactionStr = localStorage.getItem("transactionState");
+        if(transactionStr === TransactionState.ENDED) {
+          transactionState.value = TransactionState.ENDED;
+        } else if(transactionStr === TransactionState.NOT_STARTED) {
+          transactionState.value = TransactionState.NOT_STARTED;
+        }
+      }
     } else if(data.state == 1) {
       isGameCreated.value = true;
       isRegistrationOpen.value = true;
@@ -83,7 +83,9 @@ onMounted(async () => {
 
   }
 
-})
+}
+
+onMounted(refreshState)
 
 const teamFetcher = ref(null);
 
@@ -100,6 +102,8 @@ const getTeams = async() => {
 const createGame = async() => {
   try {
     const {data} = await API.createGame();
+    refreshState()
+    debugger
     isGameCreated.value = true;
     isRegistrationOpen.value = false;
     console.log(data);
@@ -153,6 +157,12 @@ const endGame = async () => {
       isGameStarted.value = false;
       needSettingsButton.value = false
       teamsShortInfo.value = [];
+      roundNumber.value = 1;
+      roundState.value = RoundState.NOT_STARTED;
+      localStorage.removeItem("roundState");
+      localStorage.removeItem("roundNumber");
+      localStorage.removeItem("transactionState");
+      transactionState.value = TransactionState.NOT_STARTED;
     console.log(data);
   } catch(e) {
     console.log(e);
@@ -243,12 +253,15 @@ const startRound = async() => {
   }
   roundState.value = RoundState.IN_PROGRESS;
   transactionState.value = TransactionState.NOT_STARTED;
+  localStorage.setItem("roundState", roundState.value.toString());
+  localStorage.setItem("transactionState", TransactionState.NOT_STARTED);
 };
 
 
 const endRound = async () => {
   await API.stopRound();
   roundState.value = RoundState.ENDED;
+  localStorage.setItem("roundState", roundState.value.toString());
 };
 
 // --------------------------- Управление транзакциями -------------------------------------
@@ -269,10 +282,12 @@ const timer = ref(null);
 const startTransaction = async() => {
     await API.startTrade();
     transactionState.value = TransactionState.IN_PROGRESS;
+    localStorage.setItem("transactionState", transactionState.value.toString());
     if (!timer.value) {
       timer.value = setInterval(() => {
         if (remainingDurationTime.value > 0) {
           remainingDurationTime.value -= 1;
+          localStorage.setItem("remainingDurationTime", remainingDurationTime.value.toString());
         } else {
           endTransaction();
         }
@@ -290,6 +305,8 @@ const endTransaction = async () => {
     await API.stopTrade();
     transactionState.value = TransactionState.ENDED;
     remainingDurationTime.value = defaultTransactionDuration;
+    localStorage.setItem("remainingDurationTime", remainingDurationTime.value.toString());
+    localStorage.setItem("transactionState", transactionState.value.toString());
     clearInterval(timer.value);
     timer.value = null;
     // Вызов метоад на бек об окончании торгов
@@ -482,7 +499,7 @@ async function closeSettingsModal(needSaveSettings) {
     <div style="flex-direction: row;">
         <button class="row-button"
         id="start-round-btn" 
-        :disabled="roundState == RoundState.IN_PROGRESS"
+        :disabled="roundState == RoundState.IN_PROGRESS || roundNumber >= 3"
         @click="startRound"
         >Начать раунд
         </button>
