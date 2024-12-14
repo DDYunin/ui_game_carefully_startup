@@ -1,6 +1,6 @@
 <template>
   <div class="wrapper">
-    <v-data-table :headers="headers" :items="companies" hide-default-footer>
+    <v-data-table :headers="headers" :items="companiesFormatted" hide-default-footer>
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Компании</v-toolbar-title>
@@ -15,7 +15,7 @@
 
               <v-card-text>
                 <v-text-field
-                  v-model="companies.name"
+                  v-model="editedItem.name"
                   label="Название компании"
                 ></v-text-field>
                 <v-text-field
@@ -103,20 +103,19 @@ const headers = ref([
   },
 ]);
 
-defineProps({
+const props = defineProps({
   companies: [],
 })
 
-const companiesHui = ref([]);
+const companiesFormatted = computed (
+  () => {
+    return props.companies.map(fromBackToFront);
+  }
+)
 
 onMounted(async () => {
-  try {
-    const { data } = await API.getCompanies();
-    console.log(data.data)
-    companies.value = data.data.map(fromBackToFront);
-  } catch (e) {
-    console.error(e);
-  }
+  // const newArr = companies.map(fromBackToFront);
+  // console.log(newArr)
 });
 
 const desserts = ref([
@@ -173,7 +172,6 @@ const formTitle = computed(() => {
 });
 
 const editItem = (item) => {
-  debugger
   editedIndex.value = companies.value.findIndex(company => {
     return company.id === item.id;
   });
