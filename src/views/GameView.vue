@@ -1,6 +1,6 @@
 <script setup>
 import { API } from '@/api/api-service';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, reactive, ref, watch } from 'vue';
 import ActionPaper from '@/components/ActionPaper.vue';
 import { jwtDecode } from 'jwt-decode';
 import { socket } from '@/api/ws-api-service';
@@ -45,6 +45,7 @@ const isTradeDone = ref(false);
 onMounted(() => {
   getGameState();
   getCompaniesAndTeam();
+  getSettings();
 });
 
 const getGameState = async () => {
@@ -150,6 +151,22 @@ const buyNew = async () => {
   }
 }
 
+// Блок настроек
+const settings = reactive({
+  settings: ''
+});
+
+const getSettings = async () => {
+  try {
+    const {data} = await API.getSetting();
+    console.log('Data from getSettings = ', data)
+    settings.settings = data;
+  } catch(e) {
+    console.log(e);
+  }
+}
+
+
 </script>
 
 <template>
@@ -220,7 +237,7 @@ const buyNew = async () => {
               class="button block__button"
               @click="buyNew"
             >
-              Купить за 10
+              Купить за {{ settings.settings.defaultAdditionalInfoCost }}
             </button>
             <button
               class="button block__button"
