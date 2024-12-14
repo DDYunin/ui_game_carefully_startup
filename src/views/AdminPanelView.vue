@@ -311,7 +311,7 @@ const needSettingsButton = ref(false)
 async function openSettingsModal() {
   settingsModalIsOpened.value = true
   try {
-    const {data} = await API.getSetting();  
+    const {data} = await API.getSetting();
     settings.value = data
   } catch(e) {
     console.log(e);
@@ -325,7 +325,7 @@ async function closeSettingsModal(needSaveSettings) {
   }
 
   try {
-    await API.updateSetting(settings.value);  
+    await API.updateSetting(settings.value);
   } catch(e) {
     console.log(e);
   }
@@ -427,6 +427,10 @@ async function closeSettingsModal(needSaveSettings) {
           <tr style="margin-top: 20px;">
             <td class="settings-table-item"> Ссылка на pdf </td>
             <td class="settings-table-item"> <input type="text" class="settings-input" v-model="settings.linkToPdf"> </td>
+          </tr>
+          <tr style="margin-top: 20px;">
+            <td class="settings-table-item"> Стоимость новости </td>
+            <td class="settings-table-item"> <input type="text" class="settings-input" v-model="settings.defaultAdditionalInfoCost"> </td>
           </tr>
         </table>
         <div style="display: flex; flex-direction: row; margin-top: 170px">
