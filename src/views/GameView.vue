@@ -66,8 +66,8 @@ const companiesForTable = computed(() => {
       name: company.name,
       cash: company.shares?.[currentRound.value],
       number: papersByCompanies.value?.[company.id],
-      value: 0,
-      picked: ''
+      value: company.value,
+      picked: company.picked
     }
   })
 });
@@ -147,6 +147,7 @@ const makeActionPapers = async () => {
       sharesChanges: result,
     });
     console.log('Data from makeActionPapers = ', data)
+    balanceAmount.value = data.balanceAmount;
   } catch (e) {
     console.error(e);
   }
