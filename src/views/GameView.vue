@@ -70,19 +70,25 @@ const makeActionPapers = async () => {
     acc[key] = papers[index];
     return acc;
   }, {});
-  debugger
   try {
-    const { data } = await API.buyPapers({
+    await API.buyPapers({
       id: teamId,
       sharesChanges: result,
-    });
-    console.log('Data from makeActionPapers = ', data)
-    balanceAmount.value = data.balanceAmount;
-    getCompaniesAndTeam();
+    }).then(data => {
+      if (data.status == 400 || data.status == 500) {
+          handleBuyPapersResponse(data.response)
+      }
+      console.log('Data from makeActionPapers = ', data.data)
+      balanceAmount.value = data.data.balanceAmount;
+      getCompaniesAndTeam();
+    }).catch(error => {
+      console.log(error)
+    })
   } catch (e) {
     console.error(e);
   }
 };
+
 
 const resetOnStartRound = async () => {
   try {
@@ -157,6 +163,51 @@ const getSettings = async () => {
     console.log(e);
   }
 }
+
+// Обработка ошибок
+
+const showModalOnTransactionError = ref(false)
+const modalOnTransactionErrorText = ref("")
+
+
+function handleBuyPapersResponse(response) {
+  if (response.status == 500) {
+    showModalOnTransactionError.value = true
+    modalOnTransactionErrorText.value = "Что-то пошло не так"
+    return
+  }
+
+
+  if (response.status == 400) {
+    showModalOnTransactionError.value = true
+    const errorCode = response.data.code
+    modalOnTransactionErrorText.value = getmodalOnTransactionErrorTextByErrorCode(errorCode)
+    return
+  }
+}
+
+
+function getmodalOnTransactionErrorTextByErrorCode(code) {
+  if (code == 10001) {
+    return "Нельзя провести сделку так как раунд торгов ещё не начался"
+  }
+
+
+  if (code == 10002) {
+    return "Выбранно некорректное количество акций для совершения сделки"
+  }
+
+
+  if (code == 10003) {
+    return "Недостаточно средств на балансе"
+  }
+}
+
+
+function onModalOnTransactionErrorClose() {
+  showModalOnTransactionError.value = false
+}
+
 
 
 </script>
@@ -297,6 +348,25 @@ const getSettings = async () => {
             Закрыть
           </v-btn>
         </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog
+      v-model="showModalOnTransactionError"
+      width="auto"
+    >
+      <v-card
+        max-width="400"
+        prepend-icon="mdi-emoticon-cry-outline"
+        :text="modalOnTransactionErrorText"
+        title="Ошибка!"
+      >
+        <template v-slot:actions>
+          <v-btn
+            class="ms-auto"
+            text="Ok"
+            @click="onModalOnTransactionErrorClose"
+          ></v-btn>
+        </template>
       </v-card>
     </v-dialog>
   </div>
