@@ -59,19 +59,23 @@ onMounted(async () => {
       isGameCreated.value = false;
       isRegistrationOpen.value = false;
       isGameStarted.value = false;
+      needSettingsButton.value = false;
     } else if(data.state == -1) { // 
       getTeams();
+      needSettingsButton.value = true;
       isGameCreated.value = true;
       isRegistrationOpen.value = false;
     } else if(data.state == 2) {
       isGameStarted.value = true;
       isGameCreated.value = true;
+      needSettingsButton.value = false;
       getTeams();
       // Видимо перезагрузили страничку и игра уже идет, поэтому нужно обновить всю инфу по командам и компаниям
     } else if(data.state == 1) {
       isGameCreated.value = true;
       isRegistrationOpen.value = true;
       teamFetcher.value = setInterval(() => { getTeams() }, 5000);
+      needSettingsButton.value = true;
     }
   } catch(e) {
     console.error(e);
@@ -99,6 +103,7 @@ const createGame = async() => {
     isGameCreated.value = true;
     isRegistrationOpen.value = false;
     console.log(data);
+    needSettingsButton.value = true
   } catch(e) {
     console.log(e);
   }
@@ -133,6 +138,7 @@ const startGame = async () => {
       const {data} = await API.startGame();
       isGameStarted.value = true;
       isGameCreated.value = true;
+      needSettingsButton.value = false
       console.log(data);
     } catch(e) {
       console.log(e);
@@ -145,6 +151,7 @@ const endGame = async () => {
       isGameCreated.value = false;
       isRegistrationOpen.value = false;
       isGameStarted.value = false;
+      needSettingsButton.value = false
       teamsShortInfo.value = [];
     console.log(data);
   } catch(e) {
@@ -302,6 +309,7 @@ const formatTime = (time) => {
 
 const settingsModalIsOpened = ref(false)
 const settings = ref({})
+const needSettingsButton = ref(false)
 
 async function openSettingsModal() {
   settingsModalIsOpened.value = true
@@ -401,7 +409,7 @@ async function closeSettingsModal(needSaveSettings) {
     </div>
 
 
-    <button class="row-button" @click="openSettingsModal">  Настройки </button>
+    <button v-if="needSettingsButton" class="row-button" @click="openSettingsModal">  Настройки </button>
 
     <div class="modal-overlay" v-if="settingsModalIsOpened">
       <div class="settings-modal">
@@ -416,11 +424,15 @@ async function closeSettingsModal(needSaveSettings) {
             <td class="settings-table-item"> {{settings.roundsDuration}} </td>
           </tr>
           <tr style="margin-top: 20px;">
+            <td class="settings-table-item"> Дефолтный баланс команд </td>
+            <td class="settings-table-item"> <input type="number" class="settings-input" v-model="settings.defaultBalance"> </td>
+          </tr>
+          <tr style="margin-top: 20px;">
             <td class="settings-table-item"> Ссылка на pdf </td>
             <td class="settings-table-item"> <input type="text" class="settings-input" v-model="settings.linkToPdf"> </td>
           </tr>
         </table>
-        <div style="display: flex; flex-direction: row; margin-top: 200px">
+        <div style="display: flex; flex-direction: row; margin-top: 170px">
           <button @click="closeSettingsModal(false)">Закрыть без сохранения</button>
           <button style="margin-left: 20px;" @click="closeSettingsModal(true)">Сохранить</button>
         </div>
