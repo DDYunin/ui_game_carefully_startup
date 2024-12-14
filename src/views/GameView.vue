@@ -130,14 +130,6 @@ const getCompaniesAndTeam = async () => {
 const isShowNews = ref(false);
 const additionalInfo = ref([]);
 
-const slides = ref([
-          'First',
-          'Second',
-          'Third',
-          'Fourth',
-          'Fifth',
-        ]);
-
 const buyNew = async () => {
   try {
     const { data } = await API.buyNew({
@@ -260,42 +252,53 @@ const getSettings = async () => {
     </div>
     <v-dialog
       v-model="isShowNews"
-      >
-        <v-card>
-          <v-card-title>
-            <span class="text-h5">Купленные новости</span>
-          </v-card-title>
-          <v-card-text>
-            <v-carousel
-              progress="primary"
-              hide-delimiters
+    >
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">Купленные новости</span>
+        </v-card-title>
+        <v-card-text>
+          <v-carousel
+            progress="primary"
+            hide-delimiters
+          >
+            <v-carousel-item
+              v-for="info in additionalInfo"
+              :key="info.id"
             >
-              <v-carousel-item
-                v-for="info in additionalInfo"
-                :key="info.id"
+              <v-sheet
+                height="100%"
               >
-                <v-sheet
-                  height="100%"
-                >
-                  <div class="d-flex fill-height justify-center align-center">
+                <div class="d-flex fill-height justify-center align-center">
+                  <div
+                    :style="{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      rowGap: '20px'
+                    }"
+                  >
                     <div class="text-h2">
-                      {{ info.name }} Slide
+                      {{ info.name }}
+                    </div>
+                    <div class="text-h4">
+                      {{ info.description }}
                     </div>
                   </div>
-                </v-sheet>
-              </v-carousel-item>
-            </v-carousel>
-          </v-card-text>
-          <v-card-actions>
-            <v-btn
-              @click="isShowNews = false"
-              color="red-darken-2"
-            >
-              Закрыть
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+                </div>
+              </v-sheet>
+            </v-carousel-item>
+          </v-carousel>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn
+            @click="isShowNews = false"
+            color="red-darken-2"
+          >
+            Закрыть
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 

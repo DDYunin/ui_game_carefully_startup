@@ -105,9 +105,33 @@ class ApiService {
     return axios.post(this.#createUrl(`team/${options.teamId}/purchase/reset`))
   }
 
+
+
   buyNew(options) {
     return axios.post(this.#createUrl(`team/purchase/additional-info/${options.teamId}`))
   }
+
+
+  // Новости
+
+  createNew(options) {
+    return axios.post(this.#createUrl('additional-info'), options)
+  }
+
+  updateNew(options, newId) {
+    return axios.put(this.#createUrl(`additional-info/${newId}`), options)
+  }
+
+  getNews() {
+    return axios.get(this.#createUrl(`additional-info?type=1`))
+  }
+
+  deleteNew(newId) {
+    return axios.delete(this.#createUrl(`additional-info/${newId}`))
+  }
+
+
+
   // Public methods
 
   refreshToken() {

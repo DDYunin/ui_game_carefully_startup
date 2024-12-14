@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted,ref } from 'vue';
 import SettingsCompanies from '@/components/SettingsCompanies.vue';
+import SettingsNews from '@/components/SettingsNews.vue';
 import { API } from '@/api/api-service';
 
 
@@ -457,9 +458,6 @@ async function closeSettingsModal(needSaveSettings) {
       </div>
     </div>
 
-
-
-
     <!-- Кнопки управления открытия и закрытия регистрации -->
       <div style="flex-direction: row;">
         <button v-if="!isGameStarted" class="row-button"
@@ -546,6 +544,16 @@ async function closeSettingsModal(needSaveSettings) {
 
     <div class="companies_container">
       <SettingsCompanies
+        v-show="isGameCreated"
+        class="active-game-section"
+        :options="{
+          disableButtons: isGameStarted
+        }"
+      />
+    </div>
+
+    <div>
+      <SettingsNews
         v-show="isGameCreated"
         class="active-game-section"
         :options="{
