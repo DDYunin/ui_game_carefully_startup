@@ -104,7 +104,6 @@ const createGame = async() => {
   try {
     const {data} = await API.createGame();
     refreshState()
-    debugger
     isGameCreated.value = true;
     isRegistrationOpen.value = false;
     console.log(data);
@@ -125,7 +124,6 @@ const openRegistration = async() => {
     console.log(e);
   }
     isRegistrationOpen.value = true;
-    teams.value.push
 };
 
 const closeRegistration =  async() => {
@@ -179,7 +177,6 @@ const openTeamInfo = async (teamId) => {
     alert("error on load companies")
     return
   }
-  debugger
   activeTeam.value = response.data
   if (response.data.shares) {
     const companyIds = Object.keys(response.data.shares)
@@ -330,6 +327,7 @@ async function openSettingsModal() {
   settingsModalIsOpened.value = true
   try {
     const {data} = await API.getSetting();
+    debugger
     settings.value = data
   } catch(e) {
     console.log(e);
@@ -342,6 +340,7 @@ async function closeSettingsModal(needSaveSettings) {
     return
   }
 
+  debugger
   try {
     await API.updateSetting(settings.value);
   } catch(e) {
@@ -448,7 +447,7 @@ async function closeSettingsModal(needSaveSettings) {
           </tr>
           <tr style="margin-top: 20px;">
             <td class="settings-table-item"> Стоимость новости </td>
-            <td class="settings-table-item"> <input type="text" class="settings-input" v-model="settings.defaultAdditionalInfoCost"> </td>
+            <td class="settings-table-item"> <input type="number" class="settings-input" v-model="settings.defaultAdditionalInfoCost"> </td>
           </tr>
         </table>
         <div style="display: flex; flex-direction: row; margin-top: 170px">

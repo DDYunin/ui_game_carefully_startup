@@ -156,7 +156,6 @@ const editItem = (item) => {
 };
 
 const deleteItem = async (item) => {
-  debugger
   try {
     await API.deleteNew(item.id);
   } catch (e) {
@@ -179,7 +178,6 @@ const deleteItemConfirm = () => {
 };
 
 const save = async () => {
-  debugger
   if (editedIndex.value > -1) {
     await API.updateNew(fromFrontToBack(editedItem), news.value[editedIndex.value].id);
     Object.assign(news.value[editedIndex.value], editedItem);

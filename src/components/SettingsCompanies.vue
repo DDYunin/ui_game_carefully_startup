@@ -36,6 +36,10 @@
                   v-model="editedItem.cash3"
                   label="Стоимость (3 раунд)"
                 ></v-text-field>
+                <v-text-field
+                  v-model="editedItem.cash4"
+                  label="Итоговая стоимость"
+                ></v-text-field>
               </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
@@ -115,6 +119,11 @@ const headers = ref([
     align: 'center',
   },
   {
+    title: 'Итоговая стоимость',
+    key: 'cash4',
+    align: 'center',
+  },
+  {
     title: 'Действия',
     key: 'actions'
   },
@@ -145,7 +154,8 @@ const editedItem = reactive({
   name: '',
   cash1: 0,
   cash2: 0,
-  cash3: 0
+  cash3: 0,
+  cash4: 0
 });
 
 const formTitle = computed(() => {
@@ -173,7 +183,8 @@ const deleteItem = async (item) => {
     name: '',
     cash1: 0,
     cash2: 0,
-    cash3: 0
+    cash3: 0,
+    cash4: 0
   });
   dialogDelete.value = true;
 };
@@ -195,7 +206,8 @@ const save = async () => {
         name: '',
         cash1: 0,
         cash2: 0,
-        cash3: 0
+        cash3: 0,
+        cash4: 0
       });
     } catch (e) {
       console.error(e);
@@ -210,7 +222,8 @@ const fromBackToFront = (item) => {
     name: item.name,
     cash1: item.shares[1],
     cash2: item.shares[2],
-    cash3: item.shares[3]
+    cash3: item.shares[3],
+    cash4: item.shares[4]
   }
 }
 
@@ -220,7 +233,8 @@ const fromFrontToBack = (item) => {
     shares: {
       1: Number(item.cash1),
       2: Number(item.cash2),
-      3: Number(item.cash3)
+      3: Number(item.cash3),
+      4: Number(item.cash4)
     }
   }
 }

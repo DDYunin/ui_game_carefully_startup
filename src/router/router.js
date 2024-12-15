@@ -16,9 +16,6 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: LoginView,
-      beforeEnter: (to, from) => {
-
-      }
     },
     {
       path: '/team',
@@ -39,9 +36,9 @@ const router = createRouter({
     {
       path: '/admin-panel',
       name: 'admin-panel',
-      // meta: {
-      //   auth: true
-      // },
+      meta: {
+        admin: true
+      },
       component: () => import('@/views/AdminPanelView.vue'),
     },
     {
@@ -58,23 +55,16 @@ const router = createRouter({
 
 router.beforeEach((to, from) => {
   const authStore = useAuthStore()
-  const adminStore = useAdminStore();
-  console.log('er ', to, from)
-  // if (to === from) {
-  //   return
-  // }
 
   // Игрок
   if (to.meta.auth && !authStore.userInfo.token) {
     return { name: 'home' }
   }
 
-  // if (to.meta.auth && !authStore.userInfo.token) {
-  //   return { name: 'home' }
-  // }
-  // if (!to.meta.auth && authStore.userInfo.token) {
-  //   return { name: 'admin-panel'}
-  // }
+  // Админ
+  if (to.meta.admin && !authStore.userInfo.token) {
+    return { name: 'admin' }
+  }
 })
 
 export default router

@@ -130,7 +130,10 @@ class ApiService {
     return axios.delete(this.#createUrl(`additional-info/${newId}`))
   }
 
-
+  // Статистика
+  getStatistics() {
+    return axios.get(this.#createUrl('team/statistics'))
+  }
 
   // Public methods
 

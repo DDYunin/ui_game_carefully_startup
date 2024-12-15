@@ -1,6 +1,6 @@
 <script setup>
 import { API } from '@/api/api-service';
-import { onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import ActionPaper from '@/components/ActionPaper.vue';
 import { jwtDecode } from 'jwt-decode';
 import { socket } from '@/api/ws-api-service';
@@ -17,11 +17,17 @@ const isRoundGo = ref('');
 
 watch(isRoundGo, async (newIsRoundGo, oldIsRoundGo) => {
   if (newIsRoundGo) {
-    console.log('Я в watcher-e ', newIsRoundGo);
     getGameState();
     getCompaniesAndTeam();
   }
 });
+
+watch(isGameGo, async (newIsRoundGo, oldIsRoundGo) => {
+  if (newIsRoundGo === 3) {
+    getStatistics()
+    showStatistics.value = true;
+  }
+})
 
 socket.onmessage = (event) => {
   const data = JSON.parse(event.data);
@@ -29,7 +35,6 @@ socket.onmessage = (event) => {
   if (key === 'isTradeStage') {
     isTradeGo.value = value;
   }
-  // Автоматически перекинуть на страницу игры
   if (key === 'gameState') {
     isGameGo.value = value;
   }
@@ -208,7 +213,29 @@ function onModalOnTransactionErrorClose() {
   showModalOnTransactionError.value = false
 }
 
+// Ожидание раунда
 
+const showLoader = computed(() => {
+  if (isRoundGo.value) {
+    return false;
+  }
+  return true;
+})
+
+// Cтатистика
+
+const statistics = ref([]);
+const showStatistics = ref(false);
+
+const getStatistics = async () => {
+  try {
+    const {data} = await API.getStatistics();
+    console.log('Data from getStatistics = ', data)
+    statistics.value = data.results;
+  } catch(e) {
+    console.log(e);
+  }
+}
 
 </script>
 
@@ -369,6 +396,42 @@ function onModalOnTransactionErrorClose() {
         </template>
       </v-card>
     </v-dialog>
+    <v-dialog
+      v-model="showLoader"
+      width="auto"
+      persistent
+    >
+      <div>
+        Ожидайте начала раунда
+        <v-progress-circular
+          indeterminate="disable-shrink"
+          size="36"
+          width="4"
+        />
+      </div>
+    </v-dialog>
+    <v-dialog
+      v-model="showStatistics"
+      width="auto"
+      persistent
+    >
+      <v-card
+        max-width="400"
+      >
+        <v-list class="list">
+          <v-list-subheader class="list__title">Результаты</v-list-subheader>
+          <v-list-item
+            v-for="(item, i) in statistics"
+            :key="i"
+            :value="item"
+            class="list__item"
+          >
+            {{ item.teamName }}. Счёт = {{ item.score }}
+          </v-list-item>
+        </v-list>
+      </v-card>
+    </v-dialog>
+
   </div>
 </template>
 
