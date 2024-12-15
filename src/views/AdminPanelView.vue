@@ -13,6 +13,13 @@ const teamsShortInfo = ref([
 const isGameCreated = ref(false); 
 const isRegistrationOpen = ref(false)
 const isGameStarted = ref(false)
+const isGameEnded = ref(false)
+
+const statistics = ref();
+
+const closeModalGameResults = () => {
+  isGameEnded.value = false;
+}
 
 
 
@@ -142,11 +149,13 @@ const startGame = async () => {
       isGameStarted.value = true;
       isGameCreated.value = true;
       needSettingsButton.value = false
+      isGameEnded.value = false;
       console.log(data);
     } catch(e) {
       console.log(e);
     }  
 };
+
 
 const endGame = async () => {
   try {
@@ -162,6 +171,9 @@ const endGame = async () => {
       localStorage.removeItem("roundNumber");
       localStorage.removeItem("transactionState");
       transactionState.value = TransactionState.NOT_STARTED;
+      const { statisticsData } = await API.getStatistics();
+      statistics.value = statisticsData;
+      isGameEnded.value = true;
     console.log(data);
   } catch(e) {
     console.log(e);
@@ -388,6 +400,29 @@ async function closeSettingsModal(needSaveSettings) {
       </v-card>
       </div>
 
+      <!-- Модалка для отображения результатов игры-->
+      <div v-if="isGameEnded" class="modal-overlay" @click="closeModalGameResults">
+      <div class="modal-content" @click.stop>
+        <h2>Результаты:</h2>
+        <v-card 
+          max-width="500"
+          class="my-4"
+          style="text-align: left;" >
+            <v-list>
+              <v-list-item 
+                v-for="(teamStat, index) in statistics" 
+                :key="index"
+                @click="openTeamInfo(teamStat.id)">
+                  <v-list-item-content>
+                    <v-list-item-title style="font-weight: bold;">{{ teamStat.name }}. Итоговый счет: {{ teamStat.score }}</v-list-item-title>
+                  </v-list-item-content>
+              </v-list-item>
+          </v-list>
+        </v-card>
+      </div>
+    </div>
+
+
       <!-- Модалка для отображения информации о команде -->
     <div v-if="activeTeam" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
@@ -496,7 +531,7 @@ async function closeSettingsModal(needSaveSettings) {
     <div style="flex-direction: row;">
         <button class="row-button"
         id="start-round-btn" 
-        :disabled="roundState == RoundState.IN_PROGRESS || roundNumber >= 3"
+        :disabled="roundState == RoundState.IN_PROGRESS || roundNumber >= 4"
         @click="startRound"
         >Начать раунд
         </button>
@@ -522,15 +557,6 @@ async function closeSettingsModal(needSaveSettings) {
         @click="startTransaction"
         >Начать торги
     </button>
-      <!-- <button 
-      id="pause-trade-btn"
-       class="row-button"
-       :disabled="transactionState != TransactionState.IN_PROGRESS || roundState == TransactionState.NOT_STARTED 
-          || roundState == TransactionState.ENDED"
-       @click="pauseTransaction"
-       >
-       Пауза торгов
-    </button> -->
       <button 
       id="end-trade-btn" 
       class="row-button"

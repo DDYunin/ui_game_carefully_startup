@@ -7,6 +7,10 @@ class ApiService {
     console.log('Я создался c адрессом = ', this.apiUrl);
   }
 
+  getStatistics(options) {
+    return axios.get(this.#createUrl('team/statistics'), options);
+  }
+
   getTeams(options) {
     return axios.get(this.#createUrl('team'), options);
   }
