@@ -217,7 +217,7 @@ function onModalOnTransactionErrorClose() {
     <div class="left-column">
       <div class="round-info">
         <div>Раунд № {{ currentRound }}</div>
-        <div>Таймер</div>
+        <!-- <div>Таймер</div> -->
       </div>
       <div class="balance-info">
         <div>Текущий баланс: {{ balanceAmount }}</div>
