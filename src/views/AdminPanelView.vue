@@ -115,6 +115,7 @@ const createGame = async() => {
     isRegistrationOpen.value = false;
     console.log(data);
     needSettingsButton.value = true
+    isGameEnded.value = false;
   } catch(e) {
     console.log(e);
   }
@@ -149,7 +150,6 @@ const startGame = async () => {
       isGameStarted.value = true;
       isGameCreated.value = true;
       needSettingsButton.value = false
-      isGameEnded.value = false;
       console.log(data);
     } catch(e) {
       console.log(e);
@@ -160,20 +160,21 @@ const startGame = async () => {
 const endGame = async () => {
   try {
     const {data} = await API.stopGame();
-      isGameCreated.value = false;
-      isRegistrationOpen.value = false;
-      isGameStarted.value = false;
-      needSettingsButton.value = false
-      teamsShortInfo.value = [];
-      roundNumber.value = 1;
-      roundState.value = RoundState.NOT_STARTED;
-      localStorage.removeItem("roundState");
-      localStorage.removeItem("roundNumber");
-      localStorage.removeItem("transactionState");
-      transactionState.value = TransactionState.NOT_STARTED;
-      const { statisticsData } = await API.getStatistics();
-      statistics.value = statisticsData;
-      isGameEnded.value = true;
+    isGameCreated.value = false;
+    isRegistrationOpen.value = false;
+    isGameStarted.value = false;
+    needSettingsButton.value = false
+    teamsShortInfo.value = [];
+    roundNumber.value = 1;
+    roundState.value = RoundState.NOT_STARTED;
+    localStorage.removeItem("roundState");
+    localStorage.removeItem("roundNumber");
+    localStorage.removeItem("transactionState");
+    transactionState.value = TransactionState.NOT_STARTED;
+    const res = await API.getStatistics();
+    debugger
+    statistics.value = res.data.results;
+    isGameEnded.value = true;
     console.log(data);
   } catch(e) {
     console.log(e);
@@ -285,7 +286,7 @@ const TransactionState = {
 
 const transactionState = ref(TransactionState.NOT_STARTED);
 
-const defaultTransactionDuration = 300; // Длительность таймера
+const defaultTransactionDuration = 600; // Длительность таймера
 const remainingDurationTime = ref(defaultTransactionDuration); // Оставшееся время
 const timer = ref(null);
 
@@ -339,7 +340,6 @@ async function openSettingsModal() {
   settingsModalIsOpened.value = true
   try {
     const {data} = await API.getSetting();
-    debugger
     settings.value = data
   } catch(e) {
     console.log(e);
@@ -351,8 +351,6 @@ async function closeSettingsModal(needSaveSettings) {
   if (!needSaveSettings) {
     return
   }
-
-  debugger
   try {
     await API.updateSetting(settings.value);
   } catch(e) {
@@ -363,14 +361,11 @@ async function closeSettingsModal(needSaveSettings) {
 </script>
 
 <template>
-
-<div class="container">
+  <div class="container">
     <header>
-        <h1>Панель администратора</h1>
+      <h1>Панель администратора</h1>
     </header>
-
     <h2 style="margin-top: 10px;">Игра</h2>
-
     <!-- Нет активной игры -->
     <div v-if="!isGameCreated" class="no-active-game-section" id="no-active-game-section">
       <div class="no-game-info">
@@ -378,30 +373,158 @@ async function closeSettingsModal(needSaveSettings) {
       </div>
       <button id="start-game-btn" @click="createGame">Создать игру!</button>
     </div>
-
-   <!-- Список команд -->
-   <div v-else class="active-game-section" id="game-management-active-game">
+    <!-- Список команд -->
+    <div v-else class="active-game-section" id="game-management-active-game">
       <div>
         <h3>Список команд:</h3>
-      <v-card 
-        max-width="500"
-        class="my-4"
-        style="text-align: left;" >
-        <v-list>
-          <v-list-item 
-            v-for="(teamShortInfo, index) in teamsShortInfo" 
-            :key="index"
-            @click="openTeamInfo(teamShortInfo.id)">
+        <v-card 
+          max-width="500"
+          class="my-4"
+          style="text-align: left;"
+        >
+          <v-list>
+            <v-list-item 
+              v-for="(teamShortInfo, index) in teamsShortInfo" 
+              :key="index"
+              @click="openTeamInfo(teamShortInfo.id)"
+            >
               <v-list-item-content>
                 <v-list-item-title style="font-weight: bold;">{{ teamShortInfo.name }}</v-list-item-title>
               </v-list-item-content>
-            </v-list-item>
-        </v-list>
-      </v-card>
+              </v-list-item>
+          </v-list>
+        </v-card>
       </div>
+      <button v-if="needSettingsButton" class="row-button" @click="openSettingsModal">  Настройки </button>
+      <!-- Кнопки управления открытия и закрытия регистрации -->
+      <div style="flex-direction: row;">
+        <button v-if="!isGameStarted" class="row-button"
+            id="start-registration-teams-btn"
+            :disabled="isRegistrationOpen" 
+            @click="openRegistration"
+            >Открыть регистрацию команд
+        </button>
+        <button v-if="!isGameStarted" class="row-button"
+            id="stop-registration-teams-btn" 
+            :disabled="!isRegistrationOpen"
+            @click="closeRegistration"
+            style="margin-right: 10px;"
+            >Закрыть регистрацию команд
+        </button>
+        <button v-if="!isGameStarted" class="row-button"
+            id="start-game-btn" 
+            :disabled="isRegistrationOpen"
+            @click="startGame"
+            >Начать игру
+        </button>
+        <button v-if="isGameStarted" class="row-button"
+            id="start-game-btn" 
+            :disabled="isRegistrationOpen"
+            @click="endGame"
+            >Завершить игру
+        </button>
+      </div>
+      <!-- Управление раундом -->
+      <div v-if="isGameStarted" class="active-game-section"  id="round-management">
+        <h2>Управление раундом</h2>
+        <p>Раунд номер: <span class="round-number">{{ roundNumber }}</span></p>
+        <p>Статус раунда: <span class="round_state">{{ roundState }}</span></p>
+        <div style="flex-direction: row;">
+          <button class="row-button"
+            id="start-round-btn" 
+            :disabled="roundState == RoundState.IN_PROGRESS || roundNumber >= 3"
+            @click="startRound"
+          >
+            Начать раунд
+          </button>
+          <button
+            class="row-button"
+            id="end-round-btn" 
+            :disabled="roundState == RoundState.ENDED || roundState == RoundState.NOT_STARTED || transactionState == TransactionState.IN_PROGRESS 
+            || transactionState == TransactionState.PAUSED"
+            @click="endRound" 
+          >
+            Закончить раунд
+          </button>
+        </div>
+      </div>
+      <!-- Управление транзакциями -->
+      <div v-if="isGameStarted" class="active-game-section" id="trade-management">
+        <h2>Управление торгами</h2>
+        <p>Статус торгов: <span class="transation_state">{{ transactionState }}</span></p>
+        <p>Оставшееся время торгов: {{ formatTime(remainingDurationTime) }} </p>
+        <button id="start-trade-btn" 
+          class="row-button"
+          :disabled="transactionState == TransactionState.IN_PROGRESS || roundState == RoundState.NOT_STARTED || roundState == RoundState.ENDED 
+          || transactionState == TransactionState.ENDED"
+          @click="startTransaction"
+        >
+          Начать торги
+        </button>
+        <button 
+          id="end-trade-btn" 
+          class="row-button"
+          @click="endTransaction"
+          :disabled="transactionState == TransactionState.ENDED || transactionState == TransactionState.NOT_STARTED || 
+            roundState == TransactionState.NOT_STARTED  || roundState == TransactionState.ENDED"
+        >
+          Завершить торги
+        </button>
+      </div>
+      <div class="companies_container">
+        <SettingsCompanies
+          v-show="isGameCreated"
+          class="active-game-section"
+          :options="{
+            disableButtons: isGameStarted
+          }"
+        />
+      </div>
+      <div>
+        <SettingsNews
+          v-show="isGameCreated"
+          class="active-game-section"
+          :options="{
+            disableButtons: isGameStarted
+          }"
+        />
+      </div>
+    </div>
+  <!-- Модалка для отображения информации о команде -->
+    <div v-if="activeTeam" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <h2>{{ activeTeam.name }}</h2>
+        <h3>Участники:</h3>
+        <ul>
+          <li v-for="member in activeTeam.members" :key="member" class="team-member">{{ member }}</li>
+        </ul>
+        <h3>Акции: </h3>
+        <table class="team-table">
+          <thead>
+            <tr>
+              <th>Название</th>
+              <th>Количество</th>
+              <th>Стоимость одной штуки</th>
+              <th>Общая стоимость</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(share, index) in activeTeam.shares" :key="index">
+              <td>{{ share.companyName }}</td>
+              <td>{{ share.count }}</td>
+              <td>{{ share.cost }}</td>
+              <td>{{ share.count * share.cost }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3 style="text-align: left; margin-top: 15px;">Оставшиеся деньги: {{ activeTeam.balanceAmount }} </h3>
+        <h3 style="text-align: left;">Суммарный капитал: {{ totalMoney(activeTeam) }} </h3>
+        <button style="margin-top: 10px;" @click="closeModal">Закрыть</button>
+      </div>
+    </div>
 
-      <!-- Модалка для отображения результатов игры-->
-      <div v-if="isGameEnded" class="modal-overlay" @click="closeModalGameResults">
+    <!-- Модалка для отображения результатов игры-->
+    <div v-if="isGameEnded" class="modal-overlay" @click="closeModalGameResults">
       <div class="modal-content" @click.stop>
         <h2>Результаты:</h2>
         <v-card 
@@ -414,7 +537,7 @@ async function closeSettingsModal(needSaveSettings) {
                 :key="index"
                 @click="openTeamInfo(teamStat.id)">
                   <v-list-item-content>
-                    <v-list-item-title style="font-weight: bold;">{{ teamStat.name }}. Итоговый счет: {{ teamStat.score }}</v-list-item-title>
+                    <v-list-item-title style="font-weight: bold;">Место: {{ index + 1 }}. Имя команды: {{ teamStat.teamName }}. Итоговый счет: {{ teamStat.score }}</v-list-item-title>
                   </v-list-item-content>
               </v-list-item>
           </v-list>
@@ -422,43 +545,6 @@ async function closeSettingsModal(needSaveSettings) {
       </div>
     </div>
 
-
-      <!-- Модалка для отображения информации о команде -->
-    <div v-if="activeTeam" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <h2>{{ activeTeam.name }}</h2>
-        <h3>Участники:</h3>
-        <ul>
-          <li v-for="member in activeTeam.members" :key="member" class="team-member">{{ member }}</li>
-        </ul>
-        <h3>Акции: </h3>
-        <table class="team-table">
-        <thead>
-          <tr>
-            <th>Название</th>
-            <th>Количество</th>
-            <th>Стоимость одной штуки</th>
-            <th>Общая стоимость</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(share, index) in activeTeam.shares" :key="index">
-            <td>{{ share.companyName }}</td>
-            <td>{{ share.count }}</td>
-            <td>{{ share.cost }}</td>
-            <td>{{ share.count * share.cost }}</td>
-          </tr>
-        </tbody>
-      </table>
-
-        <h3 style="text-align: left; margin-top: 15px;">Оставшиеся деньги: {{ activeTeam.balanceAmount }} </h3>
-        <h3 style="text-align: left;">Суммарный капитал: {{ totalMoney(activeTeam) }} </h3>
-        <button style="margin-top: 10px;" @click="closeModal">Закрыть</button>
-      </div>
-    </div>
-
-
-    <button v-if="needSettingsButton" class="row-button" @click="openSettingsModal">  Настройки </button>
 
     <div class="modal-overlay" v-if="settingsModalIsOpened">
       <div class="settings-modal">
@@ -490,101 +576,6 @@ async function closeSettingsModal(needSaveSettings) {
           <button style="margin-left: 20px;" @click="closeSettingsModal(true)">Сохранить</button>
         </div>
       </div>
-    </div>
-
-    <!-- Кнопки управления открытия и закрытия регистрации -->
-      <div style="flex-direction: row;">
-        <button v-if="!isGameStarted" class="row-button"
-            id="start-registration-teams-btn"
-            :disabled="isRegistrationOpen" 
-            @click="openRegistration"
-            >Открыть регистрацию команд
-        </button>
-        <button v-if="!isGameStarted" class="row-button"
-            id="stop-registration-teams-btn" 
-            :disabled="!isRegistrationOpen"
-            @click="closeRegistration"
-            style="margin-right: 10px;"
-            >Закрыть регистрацию команд
-        </button>
-        <button v-if="!isGameStarted" class="row-button"
-            id="start-game-btn" 
-            :disabled="isRegistrationOpen"
-            @click="startGame"
-            >Начать игру
-        </button>
-
-        <button v-if="isGameStarted" class="row-button"
-            id="start-game-btn" 
-            :disabled="isRegistrationOpen"
-            @click="endGame"
-            >Завершить игру
-        </button>
-      </div>
-    </div>
-
-    <!-- Управление раундом -->
-    <div v-if="isGameStarted" class="active-game-section"  id="round-management">
-      <h2>Управление раундом</h2>
-      <p>Раунд номер: <span class="round-number">{{ roundNumber }}</span></p>
-      <p>Статус раунда: <span class="round_state">{{ roundState }}</span></p>
-    <div style="flex-direction: row;">
-        <button class="row-button"
-        id="start-round-btn" 
-        :disabled="roundState == RoundState.IN_PROGRESS || roundNumber >= 4"
-        @click="startRound"
-        >Начать раунд
-        </button>
-      <button class="row-button"
-      id="end-round-btn" 
-      :disabled="roundState == RoundState.ENDED || roundState == RoundState.NOT_STARTED || transactionState == TransactionState.IN_PROGRESS 
-      || transactionState == TransactionState.PAUSED"
-      @click="endRound" 
-      >Закончить раунд
-    </button>
-        </div>
-    </div>
-
-    <!-- Управление транзакциями -->
-    <div v-if="isGameStarted" class="active-game-section" id="trade-management">
-      <h2>Управление торгами</h2>
-      <p>Статус торгов: <span class="transation_state">{{ transactionState }}</span></p>
-      <p>Оставшееся время торгов: {{ formatTime(remainingDurationTime) }} </p>
-      <button id="start-trade-btn" 
-        class="row-button"
-        :disabled="transactionState == TransactionState.IN_PROGRESS || roundState == RoundState.NOT_STARTED || roundState == RoundState.ENDED 
-        || transactionState == TransactionState.ENDED"
-        @click="startTransaction"
-        >Начать торги
-    </button>
-      <button 
-      id="end-trade-btn" 
-      class="row-button"
-      @click="endTransaction"
-      :disabled="transactionState == TransactionState.ENDED || transactionState == TransactionState.NOT_STARTED || 
-        roundState == TransactionState.NOT_STARTED  || roundState == TransactionState.ENDED"
-      >Завершить торги
-    </button>
-    </div>  
-
-    <div class="companies_container">
-      <SettingsCompanies
-        v-show="isGameCreated"
-        class="active-game-section"
-        :options="{
-          disableButtons: isGameStarted
-        }"
-      />
-    </div>
-
-    <div>
-      <SettingsNews
-        v-show="isGameCreated"
-        class="active-game-section"
-        :options="{
-          disableButtons: isGameStarted
-        }"
-      />
     </div>
   </div>
 </template>

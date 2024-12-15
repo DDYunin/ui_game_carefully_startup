@@ -426,7 +426,7 @@ const getStatistics = async () => {
             :value="item"
             class="list__item"
           >
-            {{ item.teamName }}. Счёт = {{ item.score }}
+            Место: {{ index + 1 }}. Имя команды: {{ item.teamName }}. Итоговый счет: {{ item.score }}
           </v-list-item>
         </v-list>
       </v-card>
