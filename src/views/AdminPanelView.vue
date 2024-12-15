@@ -491,7 +491,7 @@ async function closeSettingsModal(needSaveSettings) {
       </div>
     </div>
   <!-- Модалка для отображения информации о команде -->
-    <div v-if="activeTeam" class="modal-overlay" @click="closeModal">
+    <div v-if="activeTeam" class="modal-overlay modal-overlay-2" @click="closeModal">
       <div class="modal-content" @click.stop>
         <h2>{{ activeTeam.name }}</h2>
         <h3>Участники:</h3>
@@ -535,7 +535,7 @@ async function closeSettingsModal(needSaveSettings) {
               <v-list-item 
                 v-for="(teamStat, index) in statistics" 
                 :key="index"
-                @click="openTeamInfo(teamStat.id)">
+              >
                   <v-list-item-content>
                     <v-list-item-title style="font-weight: bold;">Место: {{ index + 1 }}. Имя команды: {{ teamStat.teamName }}. Итоговый счет: {{ teamStat.score }}</v-list-item-title>
                   </v-list-item-content>
@@ -667,7 +667,11 @@ async function closeSettingsModal(needSaveSettings) {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10000000000;
+  z-index: 1000000000;
+}
+
+.modal-overlay-2 {
+  z-index: 10000000002;
 }
 
 .modal-content {

@@ -4,8 +4,11 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import ActionPaper from '@/components/ActionPaper.vue';
 import { jwtDecode } from 'jwt-decode';
 import { socket } from '@/api/ws-api-service';
+import { useAuthStore } from '@/stores/authStore'
+import { useRouter } from 'vue-router';
+const authStore = useAuthStore()
 
-
+const router = useRouter();
 const tokens = JSON.parse(localStorage.getItem('userTokens'));
 const { sub: teamId, name: teamName } = jwtDecode(tokens.token);
 
@@ -237,6 +240,15 @@ const getStatistics = async () => {
   }
 }
 
+// Выход
+const goToStart = () => {
+  authStore.logout()
+  localStorage.removeItem('userTokens')
+  router.push({
+    name: 'home'
+  })
+}
+
 </script>
 
 <template>
@@ -426,9 +438,16 @@ const getStatistics = async () => {
             :value="item"
             class="list__item"
           >
-            Место: {{ index + 1 }}. Имя команды: {{ item.teamName }}. Итоговый счет: {{ item.score }}
+            Место: {{ i + 1 }}. Имя команды: {{ item.teamName }}. Итоговый счет: {{ item.score }}
           </v-list-item>
         </v-list>
+        <template v-slot:actions>
+          <v-spacer></v-spacer>
+
+          <v-btn @click="goToStart">
+            Ok
+          </v-btn>
+        </template>
       </v-card>
     </v-dialog>
 
