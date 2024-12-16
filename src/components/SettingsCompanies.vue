@@ -170,12 +170,10 @@ const editItem = (item) => {
   dialog.value = true;
 };
 
-const deleteItem = async (item) => {
-  try {
-    await API.deleteCompany(item.id);
-  } catch (e) {
-    console.error(e);
-  }
+let tempCompanyId = '';
+
+const deleteItem = (item) => {
+  tempCompanyId = item.id;
   editedIndex.value = companies.value.findIndex(company => {
     return company.id === item.id;
   });
@@ -189,7 +187,12 @@ const deleteItem = async (item) => {
   dialogDelete.value = true;
 };
 
-const deleteItemConfirm = () => {
+const deleteItemConfirm = async () => {
+  try {
+    await API.deleteCompany(tempCompanyId);
+  } catch (e) {
+    console.error(e);
+  }
   companies.value.splice(editedIndex.value, 1);
   dialogDelete.value = false;
 };
