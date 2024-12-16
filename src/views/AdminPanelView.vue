@@ -537,7 +537,7 @@ async function closeSettingsModal(needSaveSettings) {
                 :key="index"
               >
                   <v-list-item-content>
-                    <v-list-item-title style="font-weight: bold;">Место: {{ index + 1 }}. Имя команды: {{ teamStat.teamName }}. Итоговый счет: {{ teamStat.score }}</v-list-item-title>
+                    <div :style="{fontWeight: bold, textWrap: auto}">Место: {{ index + 1 }}. Имя команды: {{ teamStat.teamName }}. Итоговый счет: {{ teamStat.score }}</div>
                   </v-list-item-content>
               </v-list-item>
           </v-list>

@@ -1,4 +1,4 @@
-export const socket = new WebSocket("ws://80.78.243.125/:11864/api/websocket/trade-updates");
+export const socket = new WebSocket("ws://80.78.243.125:11864/api/websocket/trade-updates");
 // export const socket = new WebSocket("ws://localhost:11864/api/websocket/trade-updates");
 
 socket.onopen = function(e) {
