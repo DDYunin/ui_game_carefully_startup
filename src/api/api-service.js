@@ -3,7 +3,8 @@ import axios from "axios";
 
 class ApiService {
   constructor() {
-    this.apiUrl = 'http://localhost:11864/api/';
+    this.apiUrl = 'http://80.78.243.125/api/';
+    // this.apiUrl = 'http://localhost:11864/api/';
     console.log('Я создался c адрессом = ', this.apiUrl);
   }
 
