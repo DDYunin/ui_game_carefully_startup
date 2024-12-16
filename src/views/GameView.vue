@@ -131,7 +131,7 @@ const getCompaniesAndTeam = async () => {
         cash: company.shares[currentRound.value],
         number: team.data.shares?.[company.id],
         value: 0,
-        picked: 'sell'
+        picked: 'buy'
       }
     });
   } catch (e) {
